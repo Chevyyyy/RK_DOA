@@ -1,3 +1,0 @@
-/home/chevy/Desktop/FYP_desk/RK_DOA/build/CMakeFiles/rebuild_cache.dir
-/home/chevy/Desktop/FYP_desk/RK_DOA/build/CMakeFiles/rk_doa_cmake.dir
-/home/chevy/Desktop/FYP_desk/RK_DOA/build/CMakeFiles/edit_cache.dir
