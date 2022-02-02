@@ -1,7 +1,7 @@
 #include "stdio.h"
 #include "math.h"
 #include "iostream"
-#include "wave.h"
+#include "wav_decode.h"
 
 using namespace std;
 

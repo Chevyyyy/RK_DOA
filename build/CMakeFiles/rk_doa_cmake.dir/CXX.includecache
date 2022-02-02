@@ -1,0 +1,36 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../include/cc.hpp
+stdio.h
+../include/stdio.h
+math.h
+../include/math.h
+iostream
+../include/iostream
+wav_decode.h
+../include/wav_decode.h
+
+../include/wav_decode.h
+
+/home/chevy/Desktop/FYP_desk/RK_DOA/main.cpp
+stdio.h
+-
+stdint.h
+-
+stdlib.h
+-
+cc.hpp
+/home/chevy/Desktop/FYP_desk/RK_DOA/cc.hpp
+cmath
+/home/chevy/Desktop/FYP_desk/RK_DOA/cmath
+unistd.h
+/home/chevy/Desktop/FYP_desk/RK_DOA/unistd.h
+iomanip
+/home/chevy/Desktop/FYP_desk/RK_DOA/iomanip
+

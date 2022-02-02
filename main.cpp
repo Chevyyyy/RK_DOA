@@ -25,7 +25,7 @@ int main()
     {
 
         record();
-        fp = fopen("test.wav", "rb");
+        fp = fopen("data/test.wav", "rb");
         if (!fp)
         {
             printf("can't open audio file\n");
@@ -220,7 +220,7 @@ void visualize(double theta)
 }
 void record()
 {
-    system("arecord -D hw:0,0 -c 8 -r 44100 -s 110   -f  S16_LE  --period-size=1024  --buffer-size=4096 test.wav &>a.log");
+    system("arecord -D hw:0,0 -c 8 -r 44100 -s 110   -f  S16_LE  --period-size=1024  --buffer-size=4096 data/test.wav &>a.log");
     // cout << "recording";
     // usleep(500000);
     // system("clear");
