@@ -1,9 +1,9 @@
-#include "stdio.h"
-#include "math.h"
-#include "iostream"
-#include "wav_decode.h"
+#ifndef  _FIND_MICS_DELAY_
+#define _FIND_MICS_DELAY
 
 using namespace std;
+
+
 
 int CC(Wave1234 wx, Wave1234 wy, int n)
 {
@@ -286,3 +286,9 @@ int CC1(Wave1234 wx, Wave1234 wy, int n)
    }
  return ( delay1234.delay12.delay + delay1234.delay23.delay +  delay1234.delay34.delay + 2 * delay1234.delay13.delay + 2 *  delay1234.delay24.delay + 3 *delay1234.delay14.delay) / 10;
 }
+
+
+void delay_print();
+
+
+#endif

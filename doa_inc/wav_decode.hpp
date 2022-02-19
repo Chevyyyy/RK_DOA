@@ -1,11 +1,45 @@
+#ifndef _WAV_DECODE_
+#define _WAV_DECODE_
+#include"wav_decode.hpp"
+
+
 #define mic_distance 0.035
 #define Vs 340//speed of sound
-#define range 100
 #define average_filter_length 40
-void visualize(double theta);
-void wave_to_chs(int start,int show_data);
-void data_print();
-void record();
+
+class wav_decode
+{
+private:
+    int wav_start_point;
+    int show_decoded_data;
+    int range;
+    Wav wav;
+    Wave1234 wave1234;
+
+
+public: 
+    wav_decode()
+    {
+        range = 100;
+        wav_start_point = 0;
+        show_decoded_data = 0;
+    
+        
+        
+    }
+    ~wav_decode()
+    {
+        
+    }
+    void record();
+    void wave_to_chs();
+    
+}
+
+
+
+
+
 typedef struct WAV_RIFF
 {
     /* chunk "riff" */
@@ -42,10 +76,7 @@ typedef struct WAV_data
     int16_t block[16000 * 8];
 } Data_t;
 
-//typedef struct WAV_data_block {
-//} Data_block_t;
-
-typedef struct WAV_fotmat
+typedef struct WAV_format
 {
     RIFF_t riff;
     FMT_t fmt;
@@ -60,6 +91,7 @@ typedef struct Wave_ch1234_format
     int16_t ch4[range] = {0};
 
 } Wave1234;
+
 
 typedef struct Delayxx_format
 {
@@ -78,4 +110,8 @@ typedef struct Delay_ch1234_format
     delayxx delay24;
     delayxx delay34;
 } Delay1234;
-Delay1234 delay1234;
+
+
+
+
+#endif
