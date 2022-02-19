@@ -1,5 +1,6 @@
 # dir 不需要提交的目录
-
+build
+.vscode
 ​build/
 # file 不需要提交的文件
 config.ini
