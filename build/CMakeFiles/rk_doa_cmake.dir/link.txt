@@ -1,1 +1,0 @@
-/usr/bin/x86_64-linux-gnu-g++-7  -g  -rdynamic CMakeFiles/rk_doa_cmake.dir/main.cpp.o  -o rk_doa_cmake 

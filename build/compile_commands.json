@@ -1,7 +1,0 @@
-[
-{
-  "directory": "/home/chevy/Desktop/FYP_desk/RK_DOA/build",
-  "command": "/usr/bin/x86_64-linux-gnu-g++-7   -I/home/chevy/Desktop/FYP_desk/RK_DOA/doa_inc  -g   -o CMakeFiles/rk_doa_cmake.dir/main.cpp.o -c /home/chevy/Desktop/FYP_desk/RK_DOA/main.cpp",
-  "file": "/home/chevy/Desktop/FYP_desk/RK_DOA/main.cpp"
-}
-]
