@@ -1,11 +1,33 @@
 cmake_minimum_required(VERSION 3.0)
-
 project(RK_DOA)
 
-add_executable(rk_doa_cmake main.cpp )
 
-include_directories(doa_inc)
+### Get the required packages
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-#set(CMAKE_CXX_COMPILER "/root/prj/Firefly-RK3308/buildroot/output/firefly_rk3308_release/host/bin/aarch64-rockchip-linux-gnu-c++")
+# FFTW
+find_package(FFTW3 REQUIRED)
+
+
+### C++ config
+set(CMAKE_CXX_STANDARD 11)
+
+### Create Zero GCC-PHAT library
+add_library(zo-gcc-phat doa_src/zo-gcc-phat.cpp
+                      doa_src/zo-fft-fftw.cpp )
+target_include_directories(zo-gcc-phat PRIVATE ${FFTW3_INCLUDES} ./doa_inc)
+target_link_libraries(zo-gcc-phat ${FFTW3_LIBRARIES})
+
+
+### Create main App
+AUX_SOURCE_DIRECTORY( doa_src DIR_SRCS)
+add_executable(rk_doa_run main.cpp ${DIR_SRCS})
+target_include_directories(rk_doa_run PRIVATE ./doa_inc)
+target_link_libraries(rk_doa_run zo-gcc-phat)#link GCC lib
+
+ 
+
+
+# set(CMAKE_CXX_COMPILER "/root/prj/Firefly-RK3308/buildroot/output/firefly_rk3308_release/host/bin/aarch64-rockchip-linux-gnu-c++")
 
 

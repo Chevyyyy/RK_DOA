@@ -1,22 +1,42 @@
 #include"wav_decode.hpp"
 #include"iostream"
 
+
 using namespace std;
 
-
+wav_decode::wav_decode()
+{
+        wave1234p.ch1.resize(RANGE);
+        wave1234p.ch2.resize(RANGE);
+        wave1234p.ch3.resize(RANGE);
+        wave1234p.ch4.resize(RANGE);
+        
+        wav_start_point = 0;
+}
 void wav_decode::record()
 {
-
+    // string record_cmd=
     system("arecord -D hw:0,0 -c 8 -r 44100 -s 110   -f  S16_LE  --period-size=1024  --buffer-size=4096 sound_data/test.wav &>a.log");
     // cout << "recording";
     // usleep(500000);
     // system("clear");
 
 }
-
-void wav_decode::wave_to_chs()
+void wav_decode::read_wav_file()
 {
-    for (int i =wav_start_point * 8; i < range * 8 +wav_start_point * 8; i++)
+    FILE *fp;
+    fp = fopen("../sound_data/test.wav", "rb");
+    if(!fp)
+    {
+        cout << "can't open audio file\n";
+    }
+    fread(&wav, 1, sizeof(wav), fp);
+    fclose(fp);
+}
+Wave1234* wav_decode::wave_to_chs(bool show_decoded_data)
+{
+    
+    for (int i =wav_start_point * 8; i < RANGE * 8 +wav_start_point * 8; i++)
 
     {
         if (((i % 8 + 1) == 1) && (show_decoded_data))
@@ -32,26 +52,23 @@ void wav_decode::wave_to_chs()
         }
         int16_t show = wav.data.block[i];
         // int16_t show = (wav.data.block[i] >> 8) | (wav.data.block[i] << 8);
-        if ((show > 3) || (show < -3))
-        {
-            // show = 0;
-        }
 
+        
         if ((i % 8 + 1) == 1)
         {
-            wave1234.ch1[i / 8 -wav_start_point] = show;
+            wave1234p.ch1[i / 8 -wav_start_point] = show;
         }
         if ((i % 8 + 1) == 2)
         {
-            wave1234.ch2[i / 8 -wav_start_point] = show;
+            wave1234p.ch2[i / 8 -wav_start_point] = show;
         }
         if ((i % 8 + 1) == 3)
         {
-            wave1234.ch3[i / 8 -wav_start_point] = show;
+            wave1234p.ch3[i / 8 -wav_start_point] = show;
         }
         if ((i % 8 + 1) == 4)
         {
-            wave1234.ch4[i / 8 -wav_start_point] = show;
+            wave1234p.ch4[i / 8 -wav_start_point] = show;
         }
         if (((i % 8 + 1) < 5) && (show_decoded_data))
         {
@@ -65,5 +82,9 @@ void wav_decode::wave_to_chs()
             printf("\n");
         }
     }
+    return &wave1234p;
 }
-
+void wav_decode::set_start_point(int set_value)
+{
+    wav_start_point = set_value;
+}

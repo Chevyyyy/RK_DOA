@@ -1,43 +1,16 @@
 #ifndef _WAV_DECODE_
 #define _WAV_DECODE_
-#include"wav_decode.hpp"
 
+#include "stdint.h"
+#include "stdio.h"
+#include <vector>
+#include <cmath>
 
 #define mic_distance 0.035
-#define Vs 340//speed of sound
-#define average_filter_length 40
-
-class wav_decode
-{
-private:
-    int wav_start_point;
-    int show_decoded_data;
-    int range;
-    Wav wav;
-    Wave1234 wave1234;
-
-
-public: 
-    wav_decode()
-    {
-        range = 100;
-        wav_start_point = 0;
-        show_decoded_data = 0;
-    
-        
-        
-    }
-    ~wav_decode()
-    {
-        
-    }
-    void record();
-    void wave_to_chs();
-    
-}
-
-
-
+#define Vs 340 // speed of sound
+#define RANGE 128
+#define DELAY_TO_THETA(DELAY) 180 * asin((DELAY * Vs) / (44100 * mic_distance)) / 3.1415926
+#define DELTA  2.2676e-5
 
 
 typedef struct WAV_RIFF
@@ -85,21 +58,18 @@ typedef struct WAV_format
 
 typedef struct Wave_ch1234_format
 {
-    int16_t ch1[range] = {0};
-    int16_t ch2[range] = {0};
-    int16_t ch3[range] = {0};
-    int16_t ch4[range] = {0};
+    std::vector<int16_t> ch1;
+    std::vector<int16_t> ch2;
+    std::vector<int16_t> ch3;
+    std::vector<int16_t> ch4;
 
 } Wave1234;
-
 
 typedef struct Delayxx_format
 {
     int delay;
     double cc;
 } delayxx;
-
-
 
 typedef struct Delay_ch1234_format
 {
@@ -111,7 +81,24 @@ typedef struct Delay_ch1234_format
     delayxx delay34;
 } Delay1234;
 
+class wav_decode
+{
+private:
+    Wav wav;
+    Wave1234 wave1234p;
+    int wav_start_point;
 
+public:
+    wav_decode();
 
+    ~wav_decode()
+    {
+    }
+
+    void record();
+    void set_start_point(int set_value);
+    void read_wav_file();
+    Wave1234 *wave_to_chs(bool show_decoded_data);
+};
 
 #endif
