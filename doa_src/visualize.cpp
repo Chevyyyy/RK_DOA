@@ -52,6 +52,14 @@ void visualize::visualize_terminal(double theta)
         cout << "theta:  " << theta << "\n";
     }
 }
-
+void visualize::write_angles_to_txt(double theta)
+{
+    ofstream out("/home/chevy/Desktop/FYP_desk/visualize_qt/angles.txt");
+    if(out.is_open())
+    {
+        out << theta;
+        out.close();
+    }
+}
 
 

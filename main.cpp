@@ -14,6 +14,7 @@
 
 
 
+
 using namespace std;
 
 int main()
@@ -34,7 +35,8 @@ int main()
 
 //Low pass filter object init
     LowPassFilter LPfilter_tool(50,DELTA);
- 
+
+
 
     for (int i = 0; i < 10000;i++)
     {
@@ -46,8 +48,11 @@ int main()
         double delay_filtered=LPfilter_tool.update(delay);
         double theta = DELAY_TO_THETA(delay_filtered);
         
+        
         //visualize
-        vis_tool.visualize_terminal(theta);
+        // vis_tool.visualize_terminal(theta);
+        vis_tool.write_angles_to_txt(theta);
+
         usleep(5000);   
     }
 }

@@ -3,6 +3,7 @@
 #include"iostream"
 #include<cmath>
 #include<iomanip>
+#include<fstream>
 using namespace std;
 
 class visualize
@@ -13,10 +14,7 @@ public:
     visualize(/* args */);
     ~visualize(){};
     void visualize_terminal(double theta);
+    void write_angles_to_txt(double theta);
 };
-
-
-
-
 
 #endif
