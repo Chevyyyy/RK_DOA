@@ -1,2 +1,20 @@
-hello, that's Chenfan's project on Rockchip.
+#CHEVY's RKchip sound source localization
+
+
+
+step1:
+  connect the rk-board with your PC
+
+
+
+step2:
+  run ./build_pro for building all
+  
+  
+
+step3:
+  run ./run_pro for running sound source localization
+  
+  
+
 
