@@ -1,5 +1,7 @@
 #include "zo-fft.hpp"
+extern "C"{
 #include <fftw3.h>
+}
 #include <stdint.h>
 
 namespace zo {

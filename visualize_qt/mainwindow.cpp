@@ -44,7 +44,7 @@ void MainWindow::paintEvent(QPaintEvent *event)
 
     QPainter small_circle;
     small_circle.begin(this);
-    int test_amplified=50;
+    int test_amplified=1;
     double x=500+400*sin(test_amplified*angle/180*PI);
     double y=600-400*cos(test_amplified*angle/180*PI);
 
@@ -74,7 +74,7 @@ void MainWindow::timerCallBack()
 {
 
     QString s;
-    QFile f("/home/chevy/Desktop/FYP_desk/visualize_qt/angles.txt");
+    QFile f("/home/chevy/Desktop/FYP_desk/RK_DOA/sound_data/angles.txt");
     f.open(QIODevice::ReadOnly|QIODevice::Text);
     s=f.readLine();
     angle=s.toDouble();

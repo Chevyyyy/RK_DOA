@@ -1,0 +1,5 @@
+gnome-terminal --geometry=80x24+1200+10 --window -t "main" -x bash -c 'cd /home/chevy/Desktop/FYP_desk/RK_DOA/build;./rk_doa_run'
+
+gnome-terminal --geometry=80x24+1200+900 --window -t "recording_rk" -x bash -c 'adb shell ./CHEVY_FYP/record_rk' 
+
+

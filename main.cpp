@@ -19,12 +19,13 @@ using namespace std;
 
 int main()
 {
+    cout << "let's start!"<< endl;
 
 
 //wav decode object init
     wav_decode wav_decoder;
-    // wav_decoder.record();
-    wav_decoder.read_wav_file();
+    wav_decoder.set_start_point(10);
+
 
 //GCCPHAT object init  
     zo::GccPhat *gcc_phat = zo::GccPhat::create();
@@ -32,6 +33,7 @@ int main()
 
 //visualize object init
     visualize vis_tool;
+    vis_tool.visualize_qt();
 
 //Low pass filter object init
     LowPassFilter LPfilter_tool(50,DELTA);
@@ -40,18 +42,22 @@ int main()
 
     for (int i = 0; i < 10000;i++)
     {
-        wav_decoder.set_start_point(i);
+        wav_decoder.record();
+        wav_decoder.read_wav_file();
+
+
         Wave1234* wavech1234=wav_decoder.wave_to_chs(0);
 
         //get the tau and filter it with LPF
         int delay = gcc_phat->execute(wavech1234->ch1, wavech1234->ch2, 10);
         double delay_filtered=LPfilter_tool.update(delay);
         double theta = DELAY_TO_THETA(delay_filtered);
-        
-        
+        cout << theta << endl;
+
         //visualize
         // vis_tool.visualize_terminal(theta);
         vis_tool.write_angles_to_txt(theta);
+        
 
         usleep(5000);   
     }

@@ -10,17 +10,20 @@ wav_decode::wav_decode()
         wave1234p.ch2.resize(RANGE);
         wave1234p.ch3.resize(RANGE);
         wave1234p.ch4.resize(RANGE);
-        
+
+
         wav_start_point = 0;
 }
 void wav_decode::record()
 {
     // string record_cmd=
-    system("arecord -D hw:0,0 -c 8 -r 44100 -s 110   -f  S16_LE  --period-size=1024  --buffer-size=4096 sound_data/test.wav &>a.log");
+    // system("arecord -D hw:0,0 -c 8 -r 44100 -s 110   -f  S16_LE  --period-size=1024  --buffer-size=4096 sound_data/test.wav &>a.log");
+    system("adb pull /CHEVY_FYP/test.wav ../sound_data");
+    system("adb shell \"echo finished > /CHEVY_FYP/communication_log\"");
+
     // cout << "recording";
     // usleep(500000);
     // system("clear");
-
 }
 void wav_decode::read_wav_file()
 {
