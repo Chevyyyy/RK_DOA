@@ -47,14 +47,24 @@ void MainWindow::paintEvent(QPaintEvent *event)
     int test_amplified=1;
     double x=500+400*sin(test_amplified*angle/180*PI);
     double y=600-400*cos(test_amplified*angle/180*PI);
+    double x_filtered=500+400*sin(test_amplified*angle_filtered/180*PI);
+    double y_filtered=600-400*cos(test_amplified*angle_filtered/180*PI);
 
 
     int radius=20;
     small_circle.setBrush(Qt::SolidPattern);
     small_circle.setBrush(Qt::red);
+    small_circle.drawEllipse(QRect(x_filtered-radius,y_filtered-radius,2*radius,2*radius));
+    small_circle.setPen(Qt::red);
+    small_circle.drawText(QRect(x_filtered-45,y_filtered-40,100,40),"sound source");
+
+    small_circle.setBrush(Qt::SolidPattern);
+    small_circle.setBrush(Qt::blue);
+    small_circle.setOpacity(0.5);
     small_circle.drawEllipse(QRect(x-radius,y-radius,2*radius,2*radius));
     small_circle.setPen(Qt::red);
-    small_circle.drawText(QRect(x-45,y-40,100,40),"sound source");
+    small_circle.setOpacity(1);
+    small_circle.drawText(QRect(x-45,y+40,100,40),"NOLPF source");
 
 //    small_circle.end();
 
@@ -74,11 +84,21 @@ void MainWindow::timerCallBack()
 {
 
     QString s;
+    QString s_filtered;
+
     QFile f("/home/chevy/Desktop/FYP_desk/RK_DOA/sound_data/angles.txt");
     f.open(QIODevice::ReadOnly|QIODevice::Text);
-    s=f.readLine();
+    s=f.readLine(0);
     angle=s.toDouble();
-    s="angle: "+s;
+
+
+    s_filtered=f.readLine();
+    angle_filtered=s_filtered.toDouble();
+    s="angle: "+s+"\n"+"filterd: "+s_filtered;
+
+
+
+
     ui->textEdit->setText(s);
     update();
 

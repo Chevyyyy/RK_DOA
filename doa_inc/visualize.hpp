@@ -16,7 +16,7 @@ public:
     ~visualize(){};
     void visualize_terminal(double theta);
     void visualize_qt();
-    void write_angles_to_txt(double theta);
+    void write_angles_to_txt(double theta,double theta_filtered);
 };
 
 #endif

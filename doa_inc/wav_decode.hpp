@@ -8,9 +8,10 @@
 
 #define mic_distance 0.035
 #define Vs 340 // speed of sound
-#define RANGE 128
+#define RANGE 64
 #define DELAY_TO_THETA(DELAY) 180 * asin((DELAY * Vs) / (44100 * mic_distance)) / 3.1415926
 #define DELTA  2.2676e-5
+#define DELAY_MAX 4.539
 
 
 typedef struct WAV_RIFF

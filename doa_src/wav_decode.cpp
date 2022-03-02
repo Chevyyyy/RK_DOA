@@ -18,8 +18,8 @@ void wav_decode::record()
 {
     // string record_cmd=
     // system("arecord -D hw:0,0 -c 8 -r 44100 -s 110   -f  S16_LE  --period-size=1024  --buffer-size=4096 sound_data/test.wav &>a.log");
-    system("adb pull /CHEVY_FYP/test.wav ../sound_data");
-    system("adb shell \"echo finished > /CHEVY_FYP/communication_log\"");
+    system("adb pull /CHEVY_FYP/test.wav ../sound_data >log");
+    system("adb shell \"echo finished > /CHEVY_FYP/communication_log\" >log");
 
     // cout << "recording";
     // usleep(500000);
