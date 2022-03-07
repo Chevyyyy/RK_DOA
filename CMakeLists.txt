@@ -15,7 +15,7 @@ find_package(FFTW3 REQUIRED)
 set(CMAKE_CXX_STANDARD 11)
 
 # set(CMAKE_SYSTEM_NAME Android)
-
+include_directories(.)
 
 
 ### Create Zero GCC-PHAT library
@@ -28,7 +28,7 @@ target_link_libraries(zo-gcc-phat ${FFTW3_LIBRARIES})
 ### Create main App
 AUX_SOURCE_DIRECTORY( doa_src DIR_SRCS)
 add_executable(rk_doa_run main.cpp ${DIR_SRCS})
-target_include_directories(rk_doa_run PRIVATE ./doa_inc)
+target_include_directories(rk_doa_run PRIVATE ./doa_inc .)
 target_link_libraries(rk_doa_run zo-gcc-phat)#link GCC lib
 
  

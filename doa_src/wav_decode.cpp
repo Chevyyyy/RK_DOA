@@ -11,7 +11,7 @@ wav_decode::wav_decode()
         wave1234p.ch3.resize(RANGE);
         wave1234p.ch4.resize(RANGE);
 
-
+        wav_path = "../sound_data/test.wav";
         wav_start_point = 0;
 }
 void wav_decode::record()
@@ -28,7 +28,7 @@ void wav_decode::record()
 void wav_decode::read_wav_file()
 {
     FILE *fp;
-    fp = fopen("../sound_data/test.wav", "rb");
+    fp = fopen(wav_path.data(), "rb");
     if(!fp)
     {
         cout << "can't open audio file\n";
@@ -90,4 +90,8 @@ Wave1234* wav_decode::wave_to_chs(bool show_decoded_data)
 void wav_decode::set_start_point(int set_value)
 {
     wav_start_point = set_value;
+}
+void wav_decode::set_wav_path(char* path)
+{
+    wav_path.assign(path);
 }

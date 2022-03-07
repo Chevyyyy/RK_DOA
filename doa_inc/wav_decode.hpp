@@ -5,13 +5,13 @@
 #include "stdio.h"
 #include <vector>
 #include <cmath>
+#include <string>
+#include "main.hpp"
 
-#define mic_distance 0.035
-#define Vs 340 // speed of sound
-#define RANGE 64
-#define DELAY_TO_THETA(DELAY) 180 * asin((DELAY * Vs) / (44100 * mic_distance)) / 3.1415926
-#define DELTA  2.2676e-5
-#define DELAY_MAX 4.539
+
+
+
+
 
 
 typedef struct WAV_RIFF
@@ -66,21 +66,7 @@ typedef struct Wave_ch1234_format
 
 } Wave1234;
 
-typedef struct Delayxx_format
-{
-    int delay;
-    double cc;
-} delayxx;
 
-typedef struct Delay_ch1234_format
-{
-    delayxx delay12;
-    delayxx delay13;
-    delayxx delay14;
-    delayxx delay23;
-    delayxx delay24;
-    delayxx delay34;
-} Delay1234;
 
 class wav_decode
 {
@@ -88,6 +74,7 @@ private:
     Wav wav;
     Wave1234 wave1234p;
     int wav_start_point;
+    std::string wav_path;
 
 public:
     wav_decode();
@@ -98,6 +85,7 @@ public:
 
     void record();
     void set_start_point(int set_value);
+    void set_wav_path(char* path);
     void read_wav_file();
     Wave1234 *wave_to_chs(bool show_decoded_data);
 };
