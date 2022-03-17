@@ -7,7 +7,7 @@
 #include "iostream"
 #include <cmath>
 #include "wav_decode.hpp"
-#include "zo-gcc-phat.hpp"
+// #include "zo-gcc-phat.hpp"
 #include "visualize.hpp"
 #include "LowPassFilter.hpp"
 #include <chrono>
@@ -25,8 +25,8 @@ int main()
     wav_decoder.set_start_point(10);
 
     // GCCPHAT object init
-    zo::GccPhat *gcc_phat = zo::GccPhat::create();
-    gcc_phat->init(RANGE);
+    // zo::GccPhat *gcc_phat = zo::GccPhat::create();
+    // gcc_phat->init(RANGE);
 
     // visualize object init
     visualize vis_tool;
@@ -52,12 +52,12 @@ int main()
         Wave1234 *wavech1234 = wav_decoder.wave_to_chs(SHOW_RAW_DATA);
 
         // get the tau and filter it with LPF
-        SP_tool.delay1234.delay12.delay = gcc_phat->execute(wavech1234->ch1, wavech1234->ch2, 7);
-        SP_tool.delay1234.delay13.delay = gcc_phat->execute(wavech1234->ch1, wavech1234->ch3, 14) / 2.0;
-        SP_tool.delay1234.delay14.delay = gcc_phat->execute(wavech1234->ch1, wavech1234->ch4, 21) / 3.0;
-        SP_tool.delay1234.delay23.delay = gcc_phat->execute(wavech1234->ch2, wavech1234->ch3, 7);
-        SP_tool.delay1234.delay24.delay = gcc_phat->execute(wavech1234->ch2, wavech1234->ch4, 14) / 2.0;
-        SP_tool.delay1234.delay34.delay = gcc_phat->execute(wavech1234->ch3, wavech1234->ch4, 7);
+        // SP_tool.delay1234.delay12.delay = gcc_phat->execute(wavech1234->ch1, wavech1234->ch2, 7);
+        // SP_tool.delay1234.delay13.delay = gcc_phat->execute(wavech1234->ch1, wavech1234->ch3, 14) / 2.0;
+        // SP_tool.delay1234.delay14.delay = gcc_phat->execute(wavech1234->ch1, wavech1234->ch4, 21) / 3.0;
+        // SP_tool.delay1234.delay23.delay = gcc_phat->execute(wavech1234->ch2, wavech1234->ch3, 7);
+        // SP_tool.delay1234.delay24.delay = gcc_phat->execute(wavech1234->ch2, wavech1234->ch4, 14) / 2.0;
+        // SP_tool.delay1234.delay34.delay = gcc_phat->execute(wavech1234->ch3, wavech1234->ch4, 7);
         // SP_tool.show_delay();
 
         //for accuracy calculation
