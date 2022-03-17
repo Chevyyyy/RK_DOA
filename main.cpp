@@ -16,13 +16,6 @@
 
 using namespace chrono;
 using namespace std;
-double count1 = 0;
-double count2 = 0;
-double count3 = 0;
-double count4 = 0;
-double count5 = 0;
-double count6 = 0;
-double num = 0;
 int main()
 {
     cout << "let's start!" << endl;
@@ -42,16 +35,19 @@ int main()
     // wave signal processing object init
     WaveSignalProcess SP_tool(LPF_CUTOFF, DELTA);
 
-    for (int i = 0; i < 10000; i++)
+
+
+    for (int i = 0; i < 100000; i++)
     {
-        num++;
         // timer start
         auto start = system_clock::now();
 
-        wav_decoder.set_wav_path("../sound_data/labelled_dataset/30s_90deg_cafe_restaurant.wav");
-        // wav_decoder.record();
+        // wav_decoder.set_wav_path("../sound_data/labelled_dataset/30s_90deg_rain_forest.wav");
+        wav_decoder.record();
         wav_decoder.read_wav_file();
-        wav_decoder.set_start_point(i);
+
+
+        wav_decoder.set_start_point(0);
 
         Wave1234 *wavech1234 = wav_decoder.wave_to_chs(SHOW_RAW_DATA);
 
@@ -62,34 +58,10 @@ int main()
         SP_tool.delay1234.delay23.delay = gcc_phat->execute(wavech1234->ch2, wavech1234->ch3, 7);
         SP_tool.delay1234.delay24.delay = gcc_phat->execute(wavech1234->ch2, wavech1234->ch4, 14) / 2.0;
         SP_tool.delay1234.delay34.delay = gcc_phat->execute(wavech1234->ch3, wavech1234->ch4, 7);
-        // SP_tool.limit_delay_range();
-        SP_tool.show_delay();
+        // SP_tool.show_delay();
 
         //for accuracy calculation
-        if ((SP_tool.delay1234.delay12.delay  <5.1) && (SP_tool.delay1234.delay12.delay > 3.9))
-        {
-            count1++;
-        }
-        if ((SP_tool.delay1234.delay13.delay < 5.1) && (SP_tool.delay1234.delay13.delay >3.9))
-        {
-            count2++;
-        }
-        if ((SP_tool.delay1234.delay14.delay <5.1) && (SP_tool.delay1234.delay14.delay >3.9))
-        {
-            count3++;
-        }
-        if ((SP_tool.delay1234.delay23.delay <5.1) && (SP_tool.delay1234.delay23.delay >3.9))
-        {
-            count4++;
-        }
-        if ((SP_tool.delay1234.delay24.delay <5.1) &&(SP_tool.delay1234.delay24.delay >3.9))
-        {
-            count5++;
-        }
-        if ((SP_tool.delay1234.delay34.delay <5.1) && (SP_tool.delay1234.delay34.delay >3.9))
-        {
-            count6++;
-        }
+
 
         // filter
         double delay = SP_tool.get_delay_from_6_data();
@@ -109,14 +81,7 @@ int main()
         double duration_time = double(duration.count()) * microseconds::period::num / microseconds::period::den;
 
         // print
-        //  cout <<left<<setw(7)<< "theta: " <<left<<setw(15)<<theta<<left<<setw(7)<< "filtered: " <<left<<setw(15)<<theta_filtered<< left << setw(13) << "sample_num:" << i << left << setw(13) << "   sample_fre: "<< 1/duration_time<<"Hz"<<left<<setw(7)<< "  volume: " <<left<<setw(15)<<volume<<endl;
+         cout <<left<<setw(7)<< "theta: " <<left<<setw(12)<<theta<<left<<setw(7)<< "filtered: " <<left<<setw(12)<<theta_filtered<< left << setw(11) << "sample_num:" << i << left << setw(13) << "   sample_fre: "<< 1/duration_time<<"Hz"<<left<<setw(7)<< "  volume: " <<left<<setw(15)<<volume<<endl;
 
-        usleep(500);
     }
-    cout << "accuarcy12:" << count1/ num<< "  ";
-    cout << "accuarcy13:" << count2 / num<< "  ";
-    cout << "accuarcy14:" << count3 / num<< "  ";
-    cout << "accuarcy23:" << count4 / num<< "  ";
-    cout << "accuarcy14:" << count5 / num<< "  ";
-    cout << "accuarcy34:" << count6 / num<< "  ";
 }

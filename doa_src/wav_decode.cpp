@@ -53,6 +53,7 @@ Wave1234* wav_decode::wave_to_chs(bool show_decoded_data)
         {
             printf("|");
         }
+
         int16_t show = wav.data.block[i];
         // int16_t show = (wav.data.block[i] >> 8) | (wav.data.block[i] << 8);
 

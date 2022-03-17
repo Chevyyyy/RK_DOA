@@ -12,7 +12,7 @@ set(CMAKE_CXX_STANDARD 11)
 
 
 add_executable(record_rk main.cpp)
-target_include_directories(record_rk PRIVATE  ../doa_inc)
+target_include_directories(record_rk PRIVATE  ../doa_inc ../.. ..)
 
 
  

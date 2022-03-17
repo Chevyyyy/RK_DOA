@@ -47,7 +47,7 @@ typedef struct WAV_data
     uint32_t Subchunk2Size; /* data size */
     /* sub-chunk-data */
 
-    int16_t block[16000 * 8];
+    int16_t block[SAMPLE_RATE*8*10];
 } Data_t;
 
 typedef struct WAV_format

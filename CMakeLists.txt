@@ -21,7 +21,7 @@ include_directories(.)
 ### Create Zero GCC-PHAT library
 add_library(zo-gcc-phat doa_src/zo-gcc-phat.cpp
                       doa_src/zo-fft-fftw.cpp )
-target_include_directories(zo-gcc-phat PRIVATE ${FFTW3_INCLUDES} ./doa_inc)
+target_include_directories(zo-gcc-phat PRIVATE ${FFTW3_INCLUDES} ./doa_inc .)
 target_link_libraries(zo-gcc-phat ${FFTW3_LIBRARIES})
 
 

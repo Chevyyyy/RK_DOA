@@ -60,11 +60,11 @@ void MainWindow::paintEvent(QPaintEvent *event)
 
     small_circle.setBrush(Qt::SolidPattern);
     small_circle.setBrush(Qt::blue);
-    small_circle.setOpacity(0.5);
+    small_circle.setOpacity(0.2);
     small_circle.drawEllipse(QRect(x-radius,y-radius,2*radius,2*radius));
     small_circle.setPen(Qt::red);
     small_circle.setOpacity(1);
-    small_circle.drawText(QRect(x-45,y+40,100,40),"NOLPF source");
+    // small_circle.drawText(QRect(x-45,y+40,100,40),"NOLPF source");
 
 //    small_circle.end();
 
