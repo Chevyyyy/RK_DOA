@@ -7,7 +7,7 @@
 #include "iostream"
 #include <cmath>
 #include "wav_decode.hpp"
-// #include "zo-gcc-phat.hpp"
+#include "zo-gcc-phat.hpp"
 #include "visualize.hpp"
 #include "LowPassFilter.hpp"
 #include <chrono>
@@ -25,8 +25,8 @@ int main()
     wav_decoder.set_start_point(10);
 
     // GCCPHAT object init
-    // zo::GccPhat *gcc_phat = zo::GccPhat::create();
-    // gcc_phat->init(RANGE);
+    zo::GccPhat *gcc_phat = zo::GccPhat::create();
+    gcc_phat->init(RANGE);
 
     // visualize object init
     visualize vis_tool;
@@ -35,6 +35,11 @@ int main()
     // wave signal processing object init
     WaveSignalProcess SP_tool(LPF_CUTOFF, DELTA);
 
+    if(!ON_RKCHIP)
+    {
+        wav_decoder.set_wav_path("../sound_data/labelled_dataset/30s_90deg_rain_forest.wav");
+    }
+    
 
 
     for (int i = 0; i < 100000; i++)
@@ -42,25 +47,33 @@ int main()
         // timer start
         auto start = system_clock::now();
 
-        // wav_decoder.set_wav_path("../sound_data/labelled_dataset/30s_90deg_rain_forest.wav");
-        wav_decoder.record();
+        if(!ON_RKCHIP)
+        {
+            wav_decoder.set_start_point(i*RANGE);
+        }
+        else
+        {
+            wav_decoder.record();
+        }
+        
+        usleep(100000);
+
         wav_decoder.read_wav_file();
 
-
-        wav_decoder.set_start_point(0);
+        
 
         Wave1234 *wavech1234 = wav_decoder.wave_to_chs(SHOW_RAW_DATA);
 
         // get the tau and filter it with LPF
-        // SP_tool.delay1234.delay12.delay = gcc_phat->execute(wavech1234->ch1, wavech1234->ch2, 7);
-        // SP_tool.delay1234.delay13.delay = gcc_phat->execute(wavech1234->ch1, wavech1234->ch3, 14) / 2.0;
-        // SP_tool.delay1234.delay14.delay = gcc_phat->execute(wavech1234->ch1, wavech1234->ch4, 21) / 3.0;
-        // SP_tool.delay1234.delay23.delay = gcc_phat->execute(wavech1234->ch2, wavech1234->ch3, 7);
-        // SP_tool.delay1234.delay24.delay = gcc_phat->execute(wavech1234->ch2, wavech1234->ch4, 14) / 2.0;
-        // SP_tool.delay1234.delay34.delay = gcc_phat->execute(wavech1234->ch3, wavech1234->ch4, 7);
+        SP_tool.delay1234.delay12.delay = gcc_phat->execute(wavech1234->ch1, wavech1234->ch2, 7);
+        SP_tool.delay1234.delay13.delay = gcc_phat->execute(wavech1234->ch1, wavech1234->ch3, 14) / 2.0;
+        SP_tool.delay1234.delay14.delay = gcc_phat->execute(wavech1234->ch1, wavech1234->ch4, 21) / 3.0;
+        SP_tool.delay1234.delay23.delay = gcc_phat->execute(wavech1234->ch2, wavech1234->ch3, 7);
+        SP_tool.delay1234.delay24.delay = gcc_phat->execute(wavech1234->ch2, wavech1234->ch4, 14) / 2.0;
+        SP_tool.delay1234.delay34.delay = gcc_phat->execute(wavech1234->ch3, wavech1234->ch4, 7);
         // SP_tool.show_delay();
 
-        //for accuracy calculation
+        // for accuracy calculation
 
 
         // filter

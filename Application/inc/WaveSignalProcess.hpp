@@ -35,7 +35,7 @@ public:
     WaveSignalProcess(float iCutOffFrequency, float iDeltaTime);
     WaveSignalProcess();
     ~WaveSignalProcess(){};
-    double get_volume(std::vector<int16_t> &wav_vector);
+    double get_volume(std::vector<float> &wav_vector);
     void show_delay();
     double get_delay_from_6_data();
     Delay1234 delay1234;

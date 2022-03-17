@@ -43,12 +43,12 @@ double WaveSignalProcess::get_theta()
         return -90+180 * asin(((all_6_data_delay+DELAY_MAX) * Vs) / (SAMPLE_RATE * mic_distance)) / 3.1415926;
     }
 }
-double WaveSignalProcess::get_volume(std::vector<int16_t> &wav_vector)
+double WaveSignalProcess::get_volume(std::vector<float> &wav_vector)
 {
     double sum = 0;
     for (int i = 0; i < RANGE; i++)
     {
-        sum += fabs(wav_vector[i]);
+        sum += fabs(wav_vector[i])*fabs(wav_vector[i]);
     }
     return sum / RANGE;
 }

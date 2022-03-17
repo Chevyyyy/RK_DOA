@@ -11,19 +11,13 @@ wav_decode::wav_decode()
         wave1234p.ch3.resize(RANGE);
         wave1234p.ch4.resize(RANGE);
 
-        wav_path = "../sound_data/test.wav";
+        wav_path = "sound_data/test.wav";
         wav_start_point = 0;
 }
 void wav_decode::record()
 {
-    // string record_cmd=
-    // system("arecord -D hw:0,0 -c 8 -r 44100 -s 110   -f  S16_LE  --period-size=1024  --buffer-size=4096 sound_data/test.wav &>a.log");
-    system("adb pull /CHEVY_FYP/test.wav ../sound_data >log");
-    system("adb shell \"echo finished > /CHEVY_FYP/communication_log\" >log");
-
-    // cout << "recording";
-    // usleep(500000);
-    // system("clear");
+    string cmd = "arecord -D hw:0,0 -c 8 -r 44100 -s " + to_string(RANGE+15)+ "-f  S16_LE  --period-size=1024  --buffer-size=4096 /CHEVY_FYP/test.wav &>a.log";
+	system("arecord -D hw:0,0 -c 8 -r 44100 -s 1024   -f  S16_LE  --period-size=1024  --buffer-size=4096 /CHEVY_FYP/sound_data/test.wav &>a.log");
 }
 void wav_decode::read_wav_file()
 {

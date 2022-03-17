@@ -1,0 +1,15 @@
+
+
+
+
+cd /home/chevy/Desktop/FYP_desk/RK_DOA/visualize_qt
+make
+
+cd /home/chevy/Desktop/FYP_desk/RK_DOA/build
+make
+adb push rk_doa_run CHEVY_FYP
+
+
+cd /home/chevy/Desktop/FYP_desk/RK_DOA/visualize_qt
+./visualize_qt
+

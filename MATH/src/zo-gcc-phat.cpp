@@ -1,5 +1,5 @@
 #include "zo-gcc-phat.hpp"
-#include "zo-fft.hpp"
+#include "AudioFFT.h"
 #include <complex>
 #include <algorithm>
 #include <iostream>
@@ -9,57 +9,72 @@
 namespace zo {
     class GccPhatImpl : public GccPhat {
     public:
-        void init(const int sample_cnt) override {
-            _forward_FFT = FFT_forward::create();
-            _forward_FFT->init(sample_cnt);
-
-            _inverse_FFT = FFT_inverse::create();
-            _inverse_FFT->init(sample_cnt);
+        int sample_cnt;
+        audiofft::AudioFFT fft;
+        void init(const int cnt) override
+        {
+            
+            fft.init(cnt);
+            sample_cnt = cnt;
         }
 
         void terminate() override {
-            _forward_FFT->terminate();
-            delete _forward_FFT;
-            _inverse_FFT->terminate();
-            delete _inverse_FFT;
+            // _forward_FFT->terminate();
+            // delete _forward_FFT;
+            // _inverse_FFT->terminate();
+            // delete _inverse_FFT;
         }
 
-        int execute(const std::vector<int16_t>& siga, const std::vector<int16_t>& sigb, int margin) override {
-            std::vector<std::complex<double>> siga_fft;
-            const size_t n = siga.size();
-            //calculate_real_fft(siga_fft, siga, n);
-            _forward_FFT->execute(siga_fft, siga);
+        int execute(const std::vector<float>& siga, const std::vector<float>& sigb, int margin)  {
+            std::complex<float> I = std::complex<float>(0, 1);
+            std::vector<std::complex<float>> siga_fft(sample_cnt);
+            std::vector<float> reA(audiofft::AudioFFT::ComplexSize(sample_cnt)); 
+            std::vector<float> imA(audiofft::AudioFFT::ComplexSize(sample_cnt)); 
+            fft.fft(siga.data(),reA.data(),imA.data());
+            for (int i = 0; i <sample_cnt; i++) {
+                siga_fft[i] = reA[i] + I * imA[i];
+            }
 
-            std::vector<std::complex<double>> sigb_fft;
-            // calculate_real_fft(sigb_fft, sigb, n);
-            _forward_FFT->execute(sigb_fft, sigb);
-
+            std::vector<std::complex<float>> sigb_fft(sample_cnt);
+            std::vector<float> reB(audiofft::AudioFFT::ComplexSize(sample_cnt)); 
+            std::vector<float> imB(audiofft::AudioFFT::ComplexSize(sample_cnt)); 
+            fft.fft(sigb.data(),reB.data(),imB.data());
+            for (int i = 0; i < sample_cnt; i++) {
+                sigb_fft[i] = reB[i] + I * imB[i];
+            }
             // R = SIG * REFSIG_CONJ
-            std::vector<std::complex<double>> R;
+            std::vector<std::complex<float>> R;
             R.resize(siga_fft.size());            
             for (int i = 0; i < siga_fft.size(); i++) {
-                std::complex<double> v = sigb_fft[i] * std::conj(siga_fft[i]);
+                std::complex<float> v = sigb_fft[i] * std::conj(siga_fft[i]);
                 v = v / (std::abs(v) + FLT_MIN);
                 R[i] = v;
             }
 
 
             // Inverse
-            std::vector<double> cross_correlation;
+            std::vector<float> cross_correlation(sample_cnt);
+            std::vector<float> reR(sample_cnt); 
+            std::vector<float> imR(sample_cnt); 
+            for (int i = 0; i < R.size(); i++) {
+                reR[i] = R[i].real();
+                imR[i] = R[i].imag();
+            }
+
             // calculate_inverse_fft(cross_correlation, R, n);
-            _inverse_FFT->execute(cross_correlation, R);
+            fft.ifft(cross_correlation.data(), reR.data(), imR.data());
 
             /*
             * Shift the values in xcorr[] so that the 0th lag is at the center of
             * the output array. 
             * [Note: the index of the center value in the output will be: ceil(_N/2) ]
             */
-            std::vector<double> shifted;
-            shift<double>(shifted, cross_correlation);
+            std::vector<float> shifted;
+            shift<float>(shifted, cross_correlation);
 
-            // First, make sure the margin is within the bounds of the computed lags 
-            
-            unsigned center_i = ceil(n/2.0); 
+            // First, make sure the margin is within the bounds of the computed lags
+            int n = cross_correlation.size();
+            unsigned center_i = ceil(n / 2.0);
             unsigned newmargin=margin;
             if (((int)(center_i - newmargin)) < 0) {
                 newmargin = center_i;
@@ -87,7 +102,7 @@ namespace zo {
          * The index of the mid-point in the output will be located at: ceil(_N/2)
          * @ingroup GCC
          */
-        template<typename SCALAR=double>
+        template<typename SCALAR=float>
         void shift(std::vector<SCALAR>& out, const std::vector<SCALAR>& in) {
             const size_t N = in.size();
             
@@ -112,8 +127,8 @@ namespace zo {
         }
 
     protected:
-        FFT_forward* _forward_FFT = nullptr;
-        FFT_inverse* _inverse_FFT = nullptr;
+        // FFT_forward* _forward_FFT = nullptr;
+        // FFT_inverse* _inverse_FFT = nullptr;
 
     };
 

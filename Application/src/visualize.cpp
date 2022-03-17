@@ -54,7 +54,7 @@ void visualize::visualize_terminal(double theta)
 }
 void visualize::write_angles_to_txt(double theta, double theta_filtered)
 {
-    ofstream out("../sound_data/angles.txt");
+    ofstream out("sound_data/angles.txt");
     if(out.is_open())
     {
         out << theta<<endl<<theta_filtered;

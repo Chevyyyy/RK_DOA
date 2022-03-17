@@ -83,6 +83,8 @@ void MainWindow::paintEvent(QPaintEvent *event)
 void MainWindow::timerCallBack()
 {
 
+
+    system("adb pull CHEVY_FYP/sound_data/angles.txt /home/chevy/Desktop/FYP_desk/RK_DOA/sound_data/");
     QString s;
     QString s_filtered;
 

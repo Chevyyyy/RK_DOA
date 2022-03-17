@@ -32,6 +32,8 @@ Application/src/WaveSignalProcess.cpp
 MATH/src/LowPassFilter.cpp
 Application/src/wav_decode.cpp
 Application/src/wav_decode.cpp
+MATH/src/zo-gcc-phat.cpp
+MATH/src/AudioFFT.cpp
 )
 target_include_directories(rk_doa_run PRIVATE ./MATH/inc ./Application/inc)
 # target_link_libraries(rk_doa_run zo-gcc-phat)#link GCC lib

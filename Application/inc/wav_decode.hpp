@@ -59,10 +59,10 @@ typedef struct WAV_format
 
 typedef struct Wave_ch1234_format
 {
-    std::vector<int16_t> ch1;
-    std::vector<int16_t> ch2;
-    std::vector<int16_t> ch3;
-    std::vector<int16_t> ch4;
+    std::vector<float> ch1;
+    std::vector<float> ch2;
+    std::vector<float> ch3;
+    std::vector<float> ch4;
 
 } Wave1234;
 

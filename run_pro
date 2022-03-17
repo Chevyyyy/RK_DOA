@@ -3,3 +3,4 @@ gnome-terminal --geometry=90x10+1200+10 --window -t "main" -x bash -c 'cd /home/
 gnome-terminal --geometry=90x2+1200+300 --window -t "recording_rk" -x bash -c 'adb shell ./CHEVY_FYP/record_rk' 
 
 
+

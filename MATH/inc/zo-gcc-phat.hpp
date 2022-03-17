@@ -36,7 +36,7 @@ namespace zo {
          * @param refsignal Second signal, say from microphone 2
          * @return int "Tau" or distance signal is from refsignal
          */
-        virtual int execute(const std::vector<int16_t>& signal, const std::vector<int16_t>& refsignal, int margin) = 0;
+        virtual int execute(const std::vector<float>& signal, const std::vector<float>& refsignal, int margin) = 0;
     };
 } // namespace zo
 
