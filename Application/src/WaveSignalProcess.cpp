@@ -6,11 +6,6 @@ WaveSignalProcess::WaveSignalProcess()
 {
     
 }
-WaveSignalProcess::WaveSignalProcess(float iCutOffFrequency, float iDeltaTime) : 
-LowPassFilter(iCutOffFrequency, iDeltaTime)
-{
-    
-}
 double WaveSignalProcess::get_delay_from_6_data()
 {
     vector<double> v = {delay1234.delay12.delay, delay1234.delay13.delay, delay1234.delay14.delay, delay1234.delay23.delay, delay1234.delay24.delay, delay1234.delay34.delay};

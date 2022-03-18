@@ -6,4 +6,4 @@
 #define SHOW_RAW_DATA 0
 #define DELAY_MAX 4.2777
 #define DELTA  0.0001
-#define ON_RKCHIP 1
+#define ON_RKCHIP_FLAG

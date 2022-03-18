@@ -15,7 +15,7 @@ find_package(FFTW3 REQUIRED)
 set(CMAKE_CXX_STANDARD 11)
 
 # set(CMAKE_SYSTEM_NAME Android)
-include_directories(.)
+include_directories(. /home/chevy/compile_eigen3_2/arm_eigen/install/include/eigen3)
 
 
 ### Create Zero GCC-PHAT library
@@ -29,18 +29,19 @@ add_executable(rk_doa_run
 main.cpp 
 Application/src/visualize.cpp
 Application/src/WaveSignalProcess.cpp
-MATH/src/LowPassFilter.cpp
 Application/src/wav_decode.cpp
 Application/src/wav_decode.cpp
+
 MATH/src/zo-gcc-phat.cpp
 MATH/src/AudioFFT.cpp
+MATH/src/LowPassFilter.cpp
+MATH/src/kalman.cpp
 )
 target_include_directories(rk_doa_run PRIVATE ./MATH/inc ./Application/inc)
 # target_link_libraries(rk_doa_run zo-gcc-phat)#link GCC lib
 
  
 # set(CMAKE_CXX_COMPILER "/root/prj/Firefly-RK3308/buildroot/output/firefly_rk3308_release/host/bin/aarch64-rockchip-linux-gnu-c++")
-
 
 
 

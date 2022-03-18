@@ -27,12 +27,11 @@ typedef struct Delay_ch1234_format
 } Delay1234;
 
 
-class WaveSignalProcess : public LowPassFilter
+class WaveSignalProcess 
 {
 private:
     
 public:
-    WaveSignalProcess(float iCutOffFrequency, float iDeltaTime);
     WaveSignalProcess();
     ~WaveSignalProcess(){};
     double get_volume(std::vector<float> &wav_vector);
