@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include <QTimer>
 #include <QFile>
+#include "iostream"
 
 
 
@@ -83,8 +84,9 @@ void MainWindow::paintEvent(QPaintEvent *event)
 void MainWindow::timerCallBack()
 {
 
-
+    
     system("adb pull CHEVY_FYP/sound_data/angles.txt /home/chevy/Desktop/FYP_desk/RK_DOA/sound_data/");
+    std::cout << "pulling" << std::endl;
     QString s;
     QString s_filtered;
 

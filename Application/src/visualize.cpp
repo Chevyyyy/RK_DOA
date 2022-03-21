@@ -1,4 +1,5 @@
 #include"visualize.hpp"
+#include "main.hpp"
 
 visualize::visualize(/* args */)
 {
@@ -54,7 +55,12 @@ void visualize::visualize_terminal(double theta)
 }
 void visualize::write_angles_to_txt(double theta, double theta_filtered)
 {
+    #ifndef ON_RKCHIP_FLAG
+    ofstream out("../sound_data/angles.txt");
+    #else
     ofstream out("sound_data/angles.txt");
+    #endif
+    
     if(out.is_open())
     {
         out << theta<<endl<<theta_filtered;
@@ -63,5 +69,9 @@ void visualize::write_angles_to_txt(double theta, double theta_filtered)
 }
 void visualize::visualize_qt()
 {
+    #ifndef ON_RKCHIP_FLAG
+    #ifdef VISUAL_QT_FLAG
     system(" ./../visualize_qt/visualize_qt &");
+    #endif
+    #endif
 }

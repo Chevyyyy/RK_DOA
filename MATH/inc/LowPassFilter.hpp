@@ -3,6 +3,7 @@
 
 #include <cmath>
 
+
 class LowPassFilter{
 public:
 	//constructors
@@ -14,6 +15,8 @@ public:
 	//get and configure funtions
 	float getOutput() const{return output;}
 	void reconfigureFilter(float deltaTime, float cutoffFrequency);
+
+
 private:
 	float output;
 	float ePow;

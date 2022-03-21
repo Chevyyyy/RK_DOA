@@ -48,3 +48,5 @@ void LowPassFilter::reconfigureFilter(float deltaTime, float cutoffFrequency){
 	#endif
 	ePow = 1-exp(-deltaTime * 2 * M_PI * cutoffFrequency);
 }
+
+

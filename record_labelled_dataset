@@ -1,0 +1,4 @@
+name="10s_30degree_speech.wav"
+adb shell "arecord -D hw:0,0 -c 8 -r 44100 -d 10  -f  S16_LE  --period-size=1024  --buffer-size=4096 /CHEVY_FYP/sound_data/${name}"
+sleep 15s
+adb pull CHEVY_FYP/sound_data/${name} /home/chevy/Desktop/FYP_desk/RK_DOA/sound_data/labelled_dataset
