@@ -3,11 +3,17 @@
 #include <stdint.h>
 #include <vector>
 #include "main.hpp"
+#include "wav_decode.hpp"
+#include "numeric"
 
 namespace zo
 {
     class GccPhat
     {
+    public:
+        std::vector<float> cross_correlation;
+        double volume_index;
+
     public:
         /**
          * @brief Creates an instance of GccPhat
@@ -38,7 +44,11 @@ namespace zo
          * @param refsignal Second signal, say from microphone 2
          * @return int "Tau" or distance signal is from refsignal
          */
-        virtual void execute(const std::vector<float> &siga, const std::vector<float> &sigb, int margin, int * arg_max) = 0;
+        virtual void execute(const std::vector<float> &siga, const std::vector<float> &sigb, int margin, double *arg_max) = 0;
+        virtual void PHAT_SRP_3mic(Wave1234 *wave1234, int margin, double *arg_max) = 0;
+        virtual void PHAT_SRP_4mic(Wave1234 *wave1234, int margin, double *arg_max) = 0;
+        virtual void PHAT_SRP_2mic(Wave1234 *wave1234, int margin, double *arg_max) = 0;
+        virtual void PHAT_SRP_2mic_times_4(Wave1234 *wave1234, int margin, double *arg_max) = 0;
     };
 } // namespace zo
 

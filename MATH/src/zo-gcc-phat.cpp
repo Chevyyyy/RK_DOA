@@ -13,6 +13,7 @@ namespace zo
     public:
         int sample_cnt;
         audiofft::AudioFFT fft;
+
         void init(const int cnt) override
         {
 
@@ -28,44 +29,47 @@ namespace zo
             // delete _inverse_FFT;
         }
 
-        void execute(const std::vector<float> &siga, const std::vector<float> &sigb, int margin,int * arg_max)
+        void execute(const std::vector<float> &siga, const std::vector<float> &sigb, int margin, double *arg_max)
         {
+            
             double volumeA = 0;
             double volumeB = 0;
 
-            for (int j = 0; j < RANGE; j++)
+            for (int j = 0; j < sample_cnt; j++)
             {
-                volumeA += siga[j] * siga[j]/RANGE;
-                volumeB += sigb[j] * sigb[j]/RANGE;
+                volumeA += siga[j] * siga[j] / sample_cnt;
+                volumeB += sigb[j] * sigb[j] / sample_cnt;
             }
-
 
             std::complex<float> I = std::complex<float>(0, 1);
             std::vector<std::complex<float>> siga_fft(sample_cnt);
-            std::vector<float> reA(audiofft::AudioFFT::ComplexSize(sample_cnt));
-            std::vector<float> imA(audiofft::AudioFFT::ComplexSize(sample_cnt));
+            std::vector<float> reA(sample_cnt/2);
+            std::vector<float> imA(sample_cnt/2);
             fft.fft(siga.data(), reA.data(), imA.data());
             double sum = 0;
-            for (int i = 0; i < sample_cnt; i++)
+            for (int i = 0; i < sample_cnt / 2; i++)
             {
 
                 siga_fft[i] = reA[i] + I * imA[i];
+                siga_fft[sample_cnt - i - 1] = reA[i] + I * imA[i];
 
-                if ((i > 10) && (i < 40))
+                if ((i > 1) && (i < 12))
                 {
-                    sum += sqrt(reA[i] * reA[i] + imA[i] * imA[i]);
+                    sum += (reA[i] * reA[i] + imA[i] * imA[i]) / RANGE;
                 }
             }
-            // std::cout << "  vo  " << sum/4096/30;
+            sum = log10(sum);
 
             std::vector<std::complex<float>> sigb_fft(sample_cnt);
-            std::vector<float> reB(audiofft::AudioFFT::ComplexSize(sample_cnt));
-            std::vector<float> imB(audiofft::AudioFFT::ComplexSize(sample_cnt));
+            std::vector<float> reB(sample_cnt/2);
+            std::vector<float> imB(sample_cnt/2);
             fft.fft(sigb.data(), reB.data(), imB.data());
-            for (int i = 0; i < sample_cnt; i++)
+
+            for (int i = 0; i < sample_cnt / 2; i++)
             {
 
                 sigb_fft[i] = reB[i] + I * imB[i];
+                sigb_fft[sample_cnt - i - 1] = reB[i] + I * imB[i];
             }
             // R = SIG * REFSIG_CONJ
             std::vector<std::complex<float>> R;
@@ -73,15 +77,19 @@ namespace zo
             for (int i = 0; i < siga_fft.size(); i++)
             {
                 std::complex<float> v = sigb_fft[i] * std::conj(siga_fft[i]);
-                // v = v / (std::abs(v) + FLT_MIN);
+                std::complex<float> v1 = sigb_fft[i] * std::conj(sigb_fft[i]);
+                v = v / (std::abs(v) + FLT_MIN); // phat
+                // v = v * std::abs(v1) / std::abs((std::abs(v) + FLT_MIN) * (1 - std::abs(v1)));//ML
+                // v = v / (std::abs(v1) + FLT_MIN);//Roth
 
-                R[i] = v;
+                R[i] = v; // cc
             }
 
             // Inverse
-            std::vector<float> cross_correlation(sample_cnt);
+
             std::vector<float> reR(sample_cnt);
             std::vector<float> imR(sample_cnt);
+            cross_correlation.resize(sample_cnt);
             for (int i = 0; i < R.size(); i++)
             {
                 reR[i] = R[i].real();
@@ -101,8 +109,8 @@ namespace zo
 
             // First, make sure the margin is within the bounds of the computed lags
             int n = cross_correlation.size();
-            unsigned center_i = ceil(n / 2.0);
-            unsigned newmargin = margin;
+            double center_i = ceil(n / 2.0);
+            double newmargin = margin;
             if (((int)(center_i - newmargin)) < 0)
             {
                 newmargin = center_i;
@@ -113,16 +121,284 @@ namespace zo
             }
 
             /* Compute the begin index and length of the lags_loc[] array */
-            unsigned start_i = center_i - newmargin;
-            unsigned len = 2 * newmargin + 1;
+            double start_i = center_i - newmargin;
+            double len = 2 * newmargin + 1;
 
             // calculate argmax
             int max_index = std::distance(shifted.begin() + start_i, std::max_element(shifted.begin() + start_i, shifted.begin() + start_i + len));
 
             arg_max[0] = max_index - newmargin;
-            arg_max[1]=*std::max_element(shifted.begin() + start_i, shifted.begin() + start_i + len) /RANGE;
+            arg_max[1] = *std::max_element(shifted.begin() + start_i, shifted.begin() + start_i + len) / RANGE;
+            arg_max[2] = sum;
+            volume_index = arg_max[1];
+        }
+        void PHAT_SRP_4mic(Wave1234 *wave1234, int margin, double *arg_max)
+        {
 
-          
+            float mean1 = std::accumulate(wave1234->ch1.begin(), wave1234->ch1.end(), 0) / sample_cnt;
+            float mean2 = std::accumulate(wave1234->ch2.begin(), wave1234->ch2.end(), 0) / sample_cnt;
+            float mean3 = std::accumulate(wave1234->ch3.begin(), wave1234->ch3.end(), 0) / sample_cnt;
+            float mean4 = std::accumulate(wave1234->ch4.begin(), wave1234->ch4.end(), 0) / sample_cnt;
+            for (int i = 0; i < sample_cnt; i++)
+            {
+                wave1234->ch1[i] = wave1234->ch1[i] - mean1;
+                wave1234->ch2[i] = wave1234->ch2[i] - mean2;
+                wave1234->ch3[i] = wave1234->ch3[i] - mean3;
+                wave1234->ch4[i] = wave1234->ch4[i] - mean4;
+            }
+            std::vector<float> cross_correlation_sum(sample_cnt);
+
+            execute(wave1234->ch1, wave1234->ch2, 5, arg_max);
+            std::vector<float> cross_correlation_1(cross_correlation);
+            execute(wave1234->ch2, wave1234->ch3, 5, arg_max);
+            std::vector<float> cross_correlation_2(cross_correlation);
+            execute(wave1234->ch1, wave1234->ch3, 10, arg_max);
+            std::vector<float> cross_correlation_3(cross_correlation);
+            execute(wave1234->ch1, wave1234->ch3, 15, arg_max);
+            std::vector<float> cross_correlation_4(cross_correlation);
+            for (int i = 0; i < sample_cnt; i++)
+            {
+                // cross_correlation_3[i]
+                cross_correlation_sum[i] = (cross_correlation_1[i / 3] + cross_correlation_2[i / 3] + cross_correlation_3[i / 1.5] + cross_correlation_4[i]) / 4;
+            }
+            cross_correlation_sum[0] = cross_correlation_sum[0] - white_noise_CC;
+            cross_correlation_sum[1] = cross_correlation_sum[1] - white_noise_CC / 2;
+            cross_correlation_sum[sample_cnt - 1] = cross_correlation_sum[sample_cnt - 1] - white_noise_CC / 2;
+            /*
+             * Shift the values in xcorr[] so that the 0th lag is at the center of
+             * the output array.
+             * [Note: the index of the center value in the output will be: ceil(_N/2) ]
+             */
+            std::vector<float> shifted;
+            shift<float>(shifted, cross_correlation_sum);
+
+            // First, make sure the margin is within the bounds of the computed lags
+            int n = cross_correlation_sum.size();
+            double center_i = ceil(n / 2.0);
+            double newmargin = 25;
+            if (((int)(center_i - newmargin)) < 0)
+            {
+                newmargin = center_i;
+            }
+            if ((center_i + newmargin) >= n)
+            {
+                newmargin = (n - 1) - center_i;
+            }
+
+            /* Compute the begin index and length of the lags_loc[] array */
+            double start_i = center_i - newmargin;
+            double len = 2 * newmargin + 1;
+
+            // calculate argmax
+            int max_index = std::distance(shifted.begin() + start_i, std::max_element(shifted.begin() + start_i, shifted.begin() + start_i + len));
+
+            arg_max[0] = (max_index - newmargin) / 3.0;
+            arg_max[1] = *std::max_element(shifted.begin() + start_i, shifted.begin() + start_i + len);
+            arg_max[2] = volume_index;
+            if (arg_max[1] < 0.0)
+            {
+                arg_max[0] = -20;
+            }
+        }
+        void PHAT_SRP_3mic(Wave1234 *wave1234, int margin, double *arg_max)
+        {
+            float mean1 = std::accumulate(wave1234->ch1.begin(), wave1234->ch1.end(), 0) / sample_cnt;
+            float mean2 = std::accumulate(wave1234->ch2.begin(), wave1234->ch2.end(), 0) / sample_cnt;
+            float mean3 = std::accumulate(wave1234->ch3.begin(), wave1234->ch3.end(), 0) / sample_cnt;
+            float mean4 = std::accumulate(wave1234->ch4.begin(), wave1234->ch4.end(), 0) / sample_cnt;
+            for (int i = 0; i < sample_cnt; i++)
+            {
+                wave1234->ch1[i] = wave1234->ch1[i] - mean1;
+                wave1234->ch2[i] = wave1234->ch2[i] - mean2;
+                wave1234->ch3[i] = wave1234->ch3[i] - mean3;
+                wave1234->ch4[i] = wave1234->ch4[i] - mean4;
+            }
+            std::vector<float> cross_correlation_sum(sample_cnt);
+
+            execute(wave1234->ch1, wave1234->ch2, 5, arg_max);
+            std::vector<float> cross_correlation_1(cross_correlation);
+            execute(wave1234->ch2, wave1234->ch3, 5, arg_max);
+            std::vector<float> cross_correlation_2(cross_correlation);
+            execute(wave1234->ch1, wave1234->ch3, 10, arg_max);
+            std::vector<float> cross_correlation_3(cross_correlation);
+            for (int i = 0; i < sample_cnt; i++)
+            {
+                // cross_correlation_3[i]
+                cross_correlation_sum[i] = (cross_correlation_1[i / 2] + cross_correlation_2[i / 2] + cross_correlation_3[i]) / 3;
+            }
+            cross_correlation_sum[0] = cross_correlation_sum[0] - white_noise_CC;
+            cross_correlation_sum[1] = cross_correlation_sum[1] - white_noise_CC / 2;
+            cross_correlation_sum[sample_cnt - 1] = cross_correlation_sum[sample_cnt - 1] - white_noise_CC / 2;
+            /*
+             * Shift the values in xcorr[] so that the 0th lag is at the center of
+             * the output array.
+             * [Note: the index of the center value in the output will be: ceil(_N/2) ]
+             */
+            std::vector<float> shifted;
+            shift<float>(shifted, cross_correlation_sum);
+
+            // First, make sure the margin is within the bounds of the computed lags
+            int n = cross_correlation_sum.size();
+            double center_i = ceil(n / 2.0);
+            double newmargin = 25;
+            if (((int)(center_i - newmargin)) < 0)
+            {
+                newmargin = center_i;
+            }
+            if ((center_i + newmargin) >= n)
+            {
+                newmargin = (n - 1) - center_i;
+            }
+
+            /* Compute the begin index and length of the lags_loc[] array */
+            double start_i = center_i - newmargin;
+            double len = 2 * newmargin + 1;
+
+            // calculate argmax
+            int max_index = std::distance(shifted.begin() + start_i, std::max_element(shifted.begin() + start_i, shifted.begin() + start_i + len));
+
+            arg_max[0] = (max_index - newmargin) / 2.0;
+            arg_max[1] = *std::max_element(shifted.begin() + start_i, shifted.begin() + start_i + len);
+            arg_max[2] = volume_index;
+
+            if (arg_max[1] < 0.0)
+            {
+                arg_max[0] = -20;
+            }
+        }
+        void PHAT_SRP_2mic(Wave1234 *wave1234, int margin, double *arg_max)
+        {
+            float mean1 = std::accumulate(wave1234->ch1.begin(), wave1234->ch1.end(), 0) / sample_cnt;
+            float mean2 = std::accumulate(wave1234->ch2.begin(), wave1234->ch2.end(), 0) / sample_cnt;
+            float mean3 = std::accumulate(wave1234->ch3.begin(), wave1234->ch3.end(), 0) / sample_cnt;
+            float mean4 = std::accumulate(wave1234->ch4.begin(), wave1234->ch4.end(), 0) / sample_cnt;
+            for (int i = 0; i < sample_cnt; i++)
+            {
+                wave1234->ch1[i] = wave1234->ch1[i] - mean1;
+                wave1234->ch2[i] = wave1234->ch2[i] - mean2;
+                wave1234->ch3[i] = wave1234->ch3[i] - mean3;
+                wave1234->ch4[i] = wave1234->ch4[i] - mean4;
+            }
+
+            execute(wave1234->ch1, wave1234->ch2, 5, arg_max);
+            std::vector<float> cross_correlation_sum(cross_correlation);
+
+            cross_correlation_sum[0] = cross_correlation_sum[0] - white_noise_CC;
+            cross_correlation_sum[1] = cross_correlation_sum[1] - white_noise_CC / 4;
+            cross_correlation_sum[sample_cnt - 1] = cross_correlation_sum[sample_cnt - 1] - white_noise_CC / 4;
+            /*
+             * Shift the values in xcorr[] so that the 0th lag is at the center of
+             * the output array.
+             * [Note: the index of the center value in the output will be: ceil(_N/2) ]
+             */
+            std::vector<float> shifted;
+            shift<float>(shifted, cross_correlation_sum);
+
+            // First, make sure the margin is within the bounds of the computed lags
+            int n = cross_correlation_sum.size();
+            double center_i = ceil(n / 2.0);
+            double newmargin = 25;
+            if (((int)(center_i - newmargin)) < 0)
+            {
+                newmargin = center_i;
+            }
+            if ((center_i + newmargin) >= n)
+            {
+                newmargin = (n - 1) - center_i;
+            }
+
+            /* Compute the begin index and length of the lags_loc[] array */
+            double start_i = center_i - newmargin;
+            double len = 2 * newmargin + 1;
+
+            // calculate argmax
+            int max_index = std::distance(shifted.begin() + start_i, std::max_element(shifted.begin() + start_i, shifted.begin() + start_i + len));
+
+            arg_max[0] = (max_index - newmargin);
+            arg_max[1] = *std::max_element(shifted.begin() + start_i, shifted.begin() + start_i + len);
+            arg_max[2] = volume_index;
+
+            if (arg_max[1] < 0.12)
+            {
+                arg_max[0] = -20;
+            }
+        }
+
+        void PHAT_SRP_2mic_times_4(Wave1234 *wave1234, int margin, double *arg_max)
+        {
+            
+            float mean1 = std::accumulate(wave1234->ch1.begin(), wave1234->ch1.end(), 0) / sample_cnt;
+            float mean2 = std::accumulate(wave1234->ch2.begin(), wave1234->ch2.end(), 0) / sample_cnt;
+
+            for (int i = 0; i < sample_cnt; i++)
+            {
+                wave1234->ch1[i] = wave1234->ch1[i] - mean1;
+                wave1234->ch2[i] = wave1234->ch2[i] - mean2;
+            }
+            sample_cnt = RANGE / 4;
+            fft.init(sample_cnt);
+            std::vector<float> cross_correlation_sum(sample_cnt);
+            std::vector<float> first_seg_wav1(wave1234->ch1.begin(), wave1234->ch1.begin() + sample_cnt);
+            std::vector<float> second_seg_wav1(wave1234->ch1.begin() + sample_cnt, wave1234->ch1.begin() + sample_cnt * 2);
+            std::vector<float> third_seg_wav1(wave1234->ch1.begin() + sample_cnt *2, wave1234->ch1.begin() + sample_cnt * 3);
+            std::vector<float> forth_seg_wav1(wave1234->ch1.begin() + sample_cnt * 3, wave1234->ch1.begin() + sample_cnt*4);
+
+            std::vector<float> first_seg_wav2(wave1234->ch2.begin(), wave1234->ch2.begin() + sample_cnt );
+            std::vector<float> second_seg_wav2(wave1234->ch2.begin() + sample_cnt , wave1234->ch2.begin() + sample_cnt *2);
+            std::vector<float> third_seg_wav2(wave1234->ch2.begin() + sample_cnt *2, wave1234->ch2.begin() + sample_cnt *3);
+            std::vector<float> forth_seg_wav2(wave1234->ch2.begin() + sample_cnt * 3, wave1234->ch2.begin() + sample_cnt*4);
+
+            execute(first_seg_wav1, first_seg_wav2, 5, arg_max);
+            std::vector<float> cross_correlation_1(cross_correlation);
+            execute(second_seg_wav1, second_seg_wav2, 5, arg_max);
+            std::vector<float> cross_correlation_2(cross_correlation);
+            execute(third_seg_wav1, third_seg_wav2, 5, arg_max);
+            std::vector<float> cross_correlation_3(cross_correlation);
+            execute(forth_seg_wav1, forth_seg_wav2, 5, arg_max);
+            std::vector<float> cross_correlation_4(cross_correlation);
+
+            for (int i = 0; i < sample_cnt; i++)
+            {
+                // cross_correlation_3[i]
+                cross_correlation_sum[i] = (cross_correlation_1[i] + cross_correlation_2[i] + cross_correlation_3[i] + cross_correlation_4[i]) / 4;
+            }
+            cross_correlation_sum[0] = cross_correlation_sum[0] - white_noise_CC;
+            /*
+             * Shift the values in xcorr[] so that the 0th lag is at the center of
+             * the output array.
+             * [Note: the index of the center value in the output will be: ceil(_N/2) ]
+             */
+            std::vector<float> shifted;
+            shift<float>(shifted, cross_correlation_sum);
+
+            // First, make sure the margin is within the bounds of the computed lags
+            int n = cross_correlation_sum.size();
+            double center_i = ceil(n / 2.0);
+            double newmargin = 25;
+            if (((int)(center_i - newmargin)) < 0)
+            {
+                newmargin = center_i;
+            }
+            if ((center_i + newmargin) >= n)
+            {
+                newmargin = (n - 1) - center_i;
+            }
+
+            /* Compute the begin index and length of the lags_loc[] array */
+            double start_i = center_i - newmargin;
+            double len = 2 * newmargin + 1;
+
+            // calculate argmax
+            int max_index = std::distance(shifted.begin() + start_i, std::max_element(shifted.begin() + start_i, shifted.begin() + start_i + len));
+
+            arg_max[0] = (max_index - newmargin);
+            arg_max[1] = *std::max_element(shifted.begin() + start_i, shifted.begin() + start_i + len);
+            arg_max[2] = volume_index;
+
+            if (arg_max[1] < confidence_CC_THRESHOLD)
+            {
+                arg_max[0] = -20;
+            }
         }
 
     protected:

@@ -38,7 +38,8 @@ public:
     void show_delay();
     double get_delay_from_6_data();
     Delay1234 delay1234;
-    double get_theta();
+    double get_theta(double delay);
+    double get_delay_from_3_data();
 
 private:
     double all_6_data_delay;
