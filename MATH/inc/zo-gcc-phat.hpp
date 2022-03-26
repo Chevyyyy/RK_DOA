@@ -45,10 +45,10 @@ namespace zo
          * @return int "Tau" or distance signal is from refsignal
          */
         virtual void execute(const std::vector<float> &siga, const std::vector<float> &sigb, int margin, double *arg_max) = 0;
-        virtual void PHAT_SRP_3mic(Wave1234 *wave1234, int margin, double *arg_max) = 0;
-        virtual void PHAT_SRP_4mic(Wave1234 *wave1234, int margin, double *arg_max) = 0;
-        virtual void PHAT_SRP_2mic(Wave1234 *wave1234, int margin, double *arg_max) = 0;
-        virtual void PHAT_SRP_2mic_times_4(Wave1234 *wave1234, int margin, double *arg_max) = 0;
+        virtual void PHAT_SRP_3mic(Wave1234 *wave1234, int margin, double *arg_max,double white_cc) = 0;
+        virtual void PHAT_SRP_4mic(Wave1234 *wave1234, int margin, double *arg_max,double white_cc) = 0;
+        virtual void PHAT_SRP_2mic(Wave1234 *wave1234, int margin, double *arg_max,double white_cc) = 0;
+        virtual void PHAT_SRP_2mic_times_4(Wave1234 *wave1234, int margin, double *arg_max,double white_cc) = 0;
     };
 } // namespace zo
 

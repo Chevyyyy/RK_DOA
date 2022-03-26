@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.0)
 # set(CMAKE_CXX_COMPILER "/root/prj/Firefly-RK3308/buildroot/output/firefly_rk3308_release/host/bin/aarch64-rockchip-linux-gnu-c++")
 # set(CMAKE_C_COMPILER "/root/prj/Firefly-RK3308/buildroot/output/firefly_rk3308_release/host/bin/aarch64-rockchip-linux-gnu-gcc")
-project(RK_DOA)
+# project(RK_DOA)
 
 
 ### Get the required packages

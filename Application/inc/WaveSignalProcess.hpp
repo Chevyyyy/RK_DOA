@@ -1,8 +1,8 @@
-#ifndef  _WAVE_SIGNAL_PROCESS_
-#define  _WAVE_SIGNAL_PROCESS_
+#ifndef _WAVE_SIGNAL_PROCESS_
+#define _WAVE_SIGNAL_PROCESS_
 #include "LowPassFilter.hpp"
-#include<vector>
-#include"main.hpp"
+#include <vector>
+#include "main.hpp"
 #include "math.h"
 #include "iostream"
 #include "iomanip"
@@ -26,23 +26,23 @@ typedef struct Delay_ch1234_format
     delayxx delay34;
 } Delay1234;
 
-
-class WaveSignalProcess 
+class WaveSignalProcess
 {
 private:
-    
 public:
     WaveSignalProcess();
     ~WaveSignalProcess(){};
     double get_volume(std::vector<float> &wav_vector);
     void show_delay();
-    double get_delay_from_6_data();
     Delay1234 delay1234;
     double get_theta(double delay);
-    double get_delay_from_3_data();
+    void show_accuracy(int reference_angle, int number);
+    double theta;
+    double theta_filtered;
 
 private:
-    double all_6_data_delay;
+    int theta_right_sum;
+    int theta_filtered_right_sum;
 };
 
 #endif

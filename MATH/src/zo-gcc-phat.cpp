@@ -31,7 +31,7 @@ namespace zo
 
         void execute(const std::vector<float> &siga, const std::vector<float> &sigb, int margin, double *arg_max)
         {
-            
+
             double volumeA = 0;
             double volumeB = 0;
 
@@ -43,8 +43,8 @@ namespace zo
 
             std::complex<float> I = std::complex<float>(0, 1);
             std::vector<std::complex<float>> siga_fft(sample_cnt);
-            std::vector<float> reA(sample_cnt/2);
-            std::vector<float> imA(sample_cnt/2);
+            std::vector<float> reA(sample_cnt / 2);
+            std::vector<float> imA(sample_cnt / 2);
             fft.fft(siga.data(), reA.data(), imA.data());
             double sum = 0;
             for (int i = 0; i < sample_cnt / 2; i++)
@@ -61,8 +61,8 @@ namespace zo
             sum = log10(sum);
 
             std::vector<std::complex<float>> sigb_fft(sample_cnt);
-            std::vector<float> reB(sample_cnt/2);
-            std::vector<float> imB(sample_cnt/2);
+            std::vector<float> reB(sample_cnt / 2);
+            std::vector<float> imB(sample_cnt / 2);
             fft.fft(sigb.data(), reB.data(), imB.data());
 
             for (int i = 0; i < sample_cnt / 2; i++)
@@ -132,7 +132,7 @@ namespace zo
             arg_max[2] = sum;
             volume_index = arg_max[1];
         }
-        void PHAT_SRP_4mic(Wave1234 *wave1234, int margin, double *arg_max)
+        void PHAT_SRP_4mic(Wave1234 *wave1234, int margin, double *arg_max, double white_cc)
         {
 
             float mean1 = std::accumulate(wave1234->ch1.begin(), wave1234->ch1.end(), 0) / sample_cnt;
@@ -161,9 +161,9 @@ namespace zo
                 // cross_correlation_3[i]
                 cross_correlation_sum[i] = (cross_correlation_1[i / 3] + cross_correlation_2[i / 3] + cross_correlation_3[i / 1.5] + cross_correlation_4[i]) / 4;
             }
-            cross_correlation_sum[0] = cross_correlation_sum[0] - white_noise_CC;
-            cross_correlation_sum[1] = cross_correlation_sum[1] - white_noise_CC / 2;
-            cross_correlation_sum[sample_cnt - 1] = cross_correlation_sum[sample_cnt - 1] - white_noise_CC / 2;
+            cross_correlation_sum[0] = cross_correlation_sum[0] - white_cc;
+            cross_correlation_sum[1] = cross_correlation_sum[1] - white_cc / 2;
+            cross_correlation_sum[sample_cnt - 1] = cross_correlation_sum[sample_cnt - 1] - white_cc / 2;
             /*
              * Shift the values in xcorr[] so that the 0th lag is at the center of
              * the output array.
@@ -195,12 +195,12 @@ namespace zo
             arg_max[0] = (max_index - newmargin) / 3.0;
             arg_max[1] = *std::max_element(shifted.begin() + start_i, shifted.begin() + start_i + len);
             arg_max[2] = volume_index;
-            if (arg_max[1] < 0.0)
+            if (arg_max[1] < confidence_CC_THRESHOLD)
             {
                 arg_max[0] = -20;
             }
         }
-        void PHAT_SRP_3mic(Wave1234 *wave1234, int margin, double *arg_max)
+        void PHAT_SRP_3mic(Wave1234 *wave1234, int margin, double *arg_max, double white_cc)
         {
             float mean1 = std::accumulate(wave1234->ch1.begin(), wave1234->ch1.end(), 0) / sample_cnt;
             float mean2 = std::accumulate(wave1234->ch2.begin(), wave1234->ch2.end(), 0) / sample_cnt;
@@ -226,9 +226,11 @@ namespace zo
                 // cross_correlation_3[i]
                 cross_correlation_sum[i] = (cross_correlation_1[i / 2] + cross_correlation_2[i / 2] + cross_correlation_3[i]) / 3;
             }
-            cross_correlation_sum[0] = cross_correlation_sum[0] - white_noise_CC;
-            cross_correlation_sum[1] = cross_correlation_sum[1] - white_noise_CC / 2;
-            cross_correlation_sum[sample_cnt - 1] = cross_correlation_sum[sample_cnt - 1] - white_noise_CC / 2;
+            arg_max[2] = cross_correlation_sum[0];
+
+            cross_correlation_sum[0] = cross_correlation_sum[0] - white_cc;
+            cross_correlation_sum[1] = cross_correlation_sum[1] - white_cc / 4;
+            cross_correlation_sum[sample_cnt - 1] = cross_correlation_sum[sample_cnt - 1] - white_cc / 4;
             /*
              * Shift the values in xcorr[] so that the 0th lag is at the center of
              * the output array.
@@ -259,14 +261,13 @@ namespace zo
 
             arg_max[0] = (max_index - newmargin) / 2.0;
             arg_max[1] = *std::max_element(shifted.begin() + start_i, shifted.begin() + start_i + len);
-            arg_max[2] = volume_index;
 
-            if (arg_max[1] < 0.0)
+            if (arg_max[1] < confidence_CC_THRESHOLD)
             {
                 arg_max[0] = -20;
             }
         }
-        void PHAT_SRP_2mic(Wave1234 *wave1234, int margin, double *arg_max)
+        void PHAT_SRP_2mic(Wave1234 *wave1234, int margin, double *arg_max, double white_cc)
         {
             float mean1 = std::accumulate(wave1234->ch1.begin(), wave1234->ch1.end(), 0) / sample_cnt;
             float mean2 = std::accumulate(wave1234->ch2.begin(), wave1234->ch2.end(), 0) / sample_cnt;
@@ -282,10 +283,10 @@ namespace zo
 
             execute(wave1234->ch1, wave1234->ch2, 5, arg_max);
             std::vector<float> cross_correlation_sum(cross_correlation);
-
-            cross_correlation_sum[0] = cross_correlation_sum[0] - white_noise_CC;
-            cross_correlation_sum[1] = cross_correlation_sum[1] - white_noise_CC / 4;
-            cross_correlation_sum[sample_cnt - 1] = cross_correlation_sum[sample_cnt - 1] - white_noise_CC / 4;
+            double white_0_cc = cross_correlation_sum[0];
+            cross_correlation_sum[0] = cross_correlation_sum[0] - white_cc;
+            // cross_correlation_sum[1] = cross_correlation_sum[1] - white_cc / 4;
+            // cross_correlation_sum[sample_cnt - 1] = cross_correlation_sum[sample_cnt - 1] - white_cc / 4;
             /*
              * Shift the values in xcorr[] so that the 0th lag is at the center of
              * the output array.
@@ -316,17 +317,17 @@ namespace zo
 
             arg_max[0] = (max_index - newmargin);
             arg_max[1] = *std::max_element(shifted.begin() + start_i, shifted.begin() + start_i + len);
-            arg_max[2] = volume_index;
+            arg_max[2] = white_0_cc;
 
-            if (arg_max[1] < 0.12)
+            if (arg_max[1] < confidence_CC_THRESHOLD)
             {
                 arg_max[0] = -20;
             }
         }
 
-        void PHAT_SRP_2mic_times_4(Wave1234 *wave1234, int margin, double *arg_max)
+        void PHAT_SRP_2mic_times_4(Wave1234 *wave1234, int margin, double *arg_max, double white_cc)
         {
-            
+
             float mean1 = std::accumulate(wave1234->ch1.begin(), wave1234->ch1.end(), 0) / sample_cnt;
             float mean2 = std::accumulate(wave1234->ch2.begin(), wave1234->ch2.end(), 0) / sample_cnt;
 
@@ -340,13 +341,13 @@ namespace zo
             std::vector<float> cross_correlation_sum(sample_cnt);
             std::vector<float> first_seg_wav1(wave1234->ch1.begin(), wave1234->ch1.begin() + sample_cnt);
             std::vector<float> second_seg_wav1(wave1234->ch1.begin() + sample_cnt, wave1234->ch1.begin() + sample_cnt * 2);
-            std::vector<float> third_seg_wav1(wave1234->ch1.begin() + sample_cnt *2, wave1234->ch1.begin() + sample_cnt * 3);
-            std::vector<float> forth_seg_wav1(wave1234->ch1.begin() + sample_cnt * 3, wave1234->ch1.begin() + sample_cnt*4);
+            std::vector<float> third_seg_wav1(wave1234->ch1.begin() + sample_cnt * 2, wave1234->ch1.begin() + sample_cnt * 3);
+            std::vector<float> forth_seg_wav1(wave1234->ch1.begin() + sample_cnt * 3, wave1234->ch1.begin() + sample_cnt * 4);
 
-            std::vector<float> first_seg_wav2(wave1234->ch2.begin(), wave1234->ch2.begin() + sample_cnt );
-            std::vector<float> second_seg_wav2(wave1234->ch2.begin() + sample_cnt , wave1234->ch2.begin() + sample_cnt *2);
-            std::vector<float> third_seg_wav2(wave1234->ch2.begin() + sample_cnt *2, wave1234->ch2.begin() + sample_cnt *3);
-            std::vector<float> forth_seg_wav2(wave1234->ch2.begin() + sample_cnt * 3, wave1234->ch2.begin() + sample_cnt*4);
+            std::vector<float> first_seg_wav2(wave1234->ch2.begin(), wave1234->ch2.begin() + sample_cnt);
+            std::vector<float> second_seg_wav2(wave1234->ch2.begin() + sample_cnt, wave1234->ch2.begin() + sample_cnt * 2);
+            std::vector<float> third_seg_wav2(wave1234->ch2.begin() + sample_cnt * 2, wave1234->ch2.begin() + sample_cnt * 3);
+            std::vector<float> forth_seg_wav2(wave1234->ch2.begin() + sample_cnt * 3, wave1234->ch2.begin() + sample_cnt * 4);
 
             execute(first_seg_wav1, first_seg_wav2, 5, arg_max);
             std::vector<float> cross_correlation_1(cross_correlation);
@@ -362,7 +363,7 @@ namespace zo
                 // cross_correlation_3[i]
                 cross_correlation_sum[i] = (cross_correlation_1[i] + cross_correlation_2[i] + cross_correlation_3[i] + cross_correlation_4[i]) / 4;
             }
-            cross_correlation_sum[0] = cross_correlation_sum[0] - white_noise_CC;
+            cross_correlation_sum[0] = cross_correlation_sum[0] - white_cc;
             /*
              * Shift the values in xcorr[] so that the 0th lag is at the center of
              * the output array.
