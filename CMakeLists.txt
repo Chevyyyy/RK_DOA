@@ -1,7 +1,7 @@
 
 cmake_minimum_required(VERSION 3.0)
-# set(CMAKE_CXX_COMPILER "/root/prj/Firefly-RK3308/buildroot/output/firefly_rk3308_release/host/bin/aarch64-rockchip-linux-gnu-c++")
-# set(CMAKE_C_COMPILER "/root/prj/Firefly-RK3308/buildroot/output/firefly_rk3308_release/host/bin/aarch64-rockchip-linux-gnu-gcc")
+set(CMAKE_CXX_COMPILER "/root/prj/Firefly-RK3308/buildroot/output/firefly_rk3308_release/host/bin/aarch64-rockchip-linux-gnu-c++")
+set(CMAKE_C_COMPILER "/root/prj/Firefly-RK3308/buildroot/output/firefly_rk3308_release/host/bin/aarch64-rockchip-linux-gnu-gcc")
 # project(RK_DOA)
 
 
@@ -13,7 +13,7 @@ find_package(FFTW3 REQUIRED)
 
 
 ### C++ config
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 11)  
 
 # set(CMAKE_SYSTEM_NAME Android)
 include_directories(. /home/chevy/compile_eigen3_2/arm_eigen/install/include/eigen3)

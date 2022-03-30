@@ -41,8 +41,8 @@ public:
     double theta_filtered;
 
 private:
-    int theta_right_sum;
-    int theta_filtered_right_sum;
+    float theta_right_sum;
+    float theta_filtered_right_sum;
 };
 
 #endif

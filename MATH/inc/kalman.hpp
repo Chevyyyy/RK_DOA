@@ -65,7 +65,7 @@ public:
   Eigen::VectorXd state() { return x_hat; };
   double time() { return t; };
 
-private:
+public:
   // Matrices for computation
   Eigen::MatrixXd A, C, Q, R, P, K, P0;
 

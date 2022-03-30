@@ -29,7 +29,7 @@ double WaveSignalProcess::get_theta(double delay)
     else if ((delay > DELAY_MAX))
     {
         theta = 90 + 180 * asin(((delay - DELAY_MAX) * Vs) / (SAMPLE_RATE * mic_distance)) / PI;
-                if (abs(((delay - DELAY_MAX) * Vs) / (SAMPLE_RATE * mic_distance)) > 1)
+        if (abs(((delay - DELAY_MAX) * Vs) / (SAMPLE_RATE * mic_distance)) > 1)
         {
             return -2000;
         }
@@ -37,7 +37,7 @@ double WaveSignalProcess::get_theta(double delay)
     else if ((delay < -DELAY_MAX))
     {
         theta = -90 + 180 * asin(((delay + DELAY_MAX) * Vs) / (SAMPLE_RATE * mic_distance)) / PI;
-                if (abs(((delay + DELAY_MAX) * Vs) / (SAMPLE_RATE * mic_distance)) > 1)
+        if (abs(((delay + DELAY_MAX) * Vs) / (SAMPLE_RATE * mic_distance)) > 1)
         {
             return -2000;
         }
@@ -54,19 +54,17 @@ double WaveSignalProcess::get_volume(std::vector<float> &wav_vector)
     }
     return sum / RANGE * 100;
 }
-void WaveSignalProcess::show_accuracy(int reference_angle,int number)
+void WaveSignalProcess::show_accuracy(int reference_angle, int number)
 {
-     if (abs(theta - reference_angle) < 5)
-        {
-            theta_right_sum++;
-        }
-        if (abs(theta_filtered - reference_angle) < 5)
-        {
-            theta_filtered_right_sum++;
-        }
-        if (number % 20 == 1)
-        {
-            cout << "\n\n##accuracy: " << theta_right_sum /number * 100 << "%\n";
-            cout << "##accuracy: " << theta_filtered_right_sum /number* 100 << "%\n\n";
-        }
+    if (abs(theta - reference_angle) < 5)
+    {
+        theta_right_sum++;
+    }
+    if (abs(theta_filtered - reference_angle) < 5)
+    {
+        theta_filtered_right_sum++;
+    }
+
+    cout << "\n\n##accuracy: " << theta_right_sum / number * 100 << "%\n";
+    cout << "##accuracy: " << theta_filtered_right_sum / number * 100 << "%\n\n";
 }

@@ -24,7 +24,7 @@ int main()
 
     // wav decode object init
     wav_decode wav_decoder;
-    wav_decoder.set_start_point(10);
+    wav_decoder.set_start_point(0);
 
     // GCCPHAT object init
     zo::GccPhat *gcc_phat = zo::GccPhat::create();
@@ -35,6 +35,7 @@ int main()
 
     // if there is a obvious sound count
     double no_obvious_sound_count = 0;
+    double obvious_sound_count = 0;
 
     // visualize object init
     visualize vis_tool;
@@ -49,7 +50,7 @@ int main()
     // kalman init
     int n = 2; // Number of states
     int m = 1; // Number of measurements
-    double R_init = 10;
+    double R_init = 5;
     double dt = 1 / 4.5; // Time step
 
     Eigen::MatrixXd A(n, n); // System dynamics matrix
@@ -63,9 +64,9 @@ int main()
     C << 1, 0;
 
     // Reasonable covariance matrices
-    Q << 0.1, 0, 0, 0.1;
+    Q << 0, 0, 0, 0.01;
     R << R_init;
-    P << 1, 1, 1, 1;
+    P << 30, 1, 1, 1;
 
     KalmanFilter KF(dt, A, C, Q, R, P);
 
@@ -92,6 +93,7 @@ int main()
         SP_tool.theta = -20;
         double target_band_amplitued = 0;
         double confidence_CC = 0;
+        
 
         no_obvious_sound_count = 0;
 
@@ -101,7 +103,7 @@ int main()
         while (volume < VOLUME_THRESHOLD)
         {
 #ifndef ON_RKCHIP_FLAG
-            wav_decoder.set_start_point((i + k) * RANGE + 43620);
+            wav_decoder.set_start_point((i + k) * RANGE / 2 + 43620);
 #else
             wav_decoder.record();
 #endif
@@ -109,22 +111,37 @@ int main()
             wav_decoder.read_wav_file();
             // calculate the volume of a period of sound
             wavech1234 = wav_decoder.wave_to_chs(SHOW_RAW_DATA);
-            // usleep(100000);
             volume = SP_tool.get_volume(wavech1234->ch1);
-
 
 #ifdef PHAT_SPR
             // PHAT-SPR
-            double delay_cc_white[3];
-            gcc_phat->PHAT_SRP_3mic(wavech1234, 5, delay_cc_white, white_cc);
+            double delay_cc_white[5];
+            gcc_phat->PHAT_SRP_4mic(wavech1234, 5, delay_cc_white, white_cc);
             double delay = delay_cc_white[0];
+
             confidence_CC = delay_cc_white[1];
-            white_cc = delay_cc_white[2];
+
+            // if there is no sound source at 0deg, regraded the cc at 0deg as white noise
+            if (delay != 0)
+            {
+                white_cc = delay_cc_white[2];
+            }
 #endif
 
             // get the theta through delays
             SP_tool.get_theta(delay);
-
+            if ((abs(SP_tool.theta - SP_tool.theta_filtered) > 20)||(delay==-20))
+            {
+                if (delay_cc_white[3] != -20)
+                {
+                    delay = delay_cc_white[3];
+                    SP_tool.get_theta(delay);
+                    if (abs(SP_tool.theta - SP_tool.theta_filtered) > 20)
+                    {
+                        delay = -20;
+                    }
+                }
+            }
             Eigen::VectorXd y(m);
 
             t += dt;
@@ -146,7 +163,7 @@ int main()
                 {
                     y << SP_tool.theta;
                 }
-                //update the deviation of measurment data
+                // update the deviation of measurment data
                 R << R_init / confidence_CC;
             }
             no_obvious_sound_count++;
@@ -162,8 +179,10 @@ int main()
             {
                 vis_tool.write_angles_to_txt(-1000, -1000);
                 cout << "&&&&&&&&&&&&&&&&&&&&&\n****************\n";
+                obvious_sound_count = 0;
+                SP_tool.theta_filtered = (2 - rand() % 5) * 30;
             }
-            cout << "\nwhite_cc$$$$$$$: " << white_cc << endl;
+            // cout << "\nwhite_cc$$$$$$$: " << white_cc << endl;
         }
 
         //@2nd STEP choosen data feeds kalman model
@@ -171,7 +190,7 @@ int main()
         SP_tool.theta_filtered = (KF.state())[0];
 
         // for accuracy calculation
-        SP_tool.show_accuracy(20, i + 1);
+        // SP_tool.show_accuracy(refernce_angle, i + 1);
 
         cout << "confidence_CC$$$$$$$: " << confidence_CC << endl;
 

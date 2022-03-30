@@ -152,18 +152,33 @@ namespace zo
             std::vector<float> cross_correlation_1(cross_correlation);
             execute(wave1234->ch2, wave1234->ch3, 5, arg_max);
             std::vector<float> cross_correlation_2(cross_correlation);
-            execute(wave1234->ch1, wave1234->ch3, 10, arg_max);
+            execute(wave1234->ch3, wave1234->ch4, 5, arg_max);
             std::vector<float> cross_correlation_3(cross_correlation);
-            execute(wave1234->ch1, wave1234->ch3, 15, arg_max);
-            std::vector<float> cross_correlation_4(cross_correlation);
+
             for (int i = 0; i < sample_cnt; i++)
             {
                 // cross_correlation_3[i]
-                cross_correlation_sum[i] = (cross_correlation_1[i / 3] + cross_correlation_2[i / 3] + cross_correlation_3[i / 1.5] + cross_correlation_4[i]) / 4;
+                cross_correlation_sum[i] = (cross_correlation_1[i] + cross_correlation_2[i] + cross_correlation_3[i]) / 3.0;
             }
+
+            execute(wave1234->ch1, wave1234->ch3, 10, arg_max);
+            std::vector<float> cross_correlation_4(cross_correlation);
+            execute(wave1234->ch2, wave1234->ch4, 10, arg_max);
+            std::vector<float> cross_correlation_5(cross_correlation);
+            execute(wave1234->ch1, wave1234->ch4, 15, arg_max);
+            std::vector<float> cross_correlation_6(cross_correlation);
+
+            for (int i = 0; i < sample_cnt / 2; i++)
+            {
+                // cross_correlation_3[i]
+                cross_correlation_sum[i] = (cross_correlation_1[(i +2)/ 3] + cross_correlation_2[(i +2) / 3] + cross_correlation_3[(i +2)/ 3] + cross_correlation_4[(i +1) / 1.5] + cross_correlation_5[(i+1) / 1.5] + cross_correlation_6[i]) / 6.0;
+                cross_correlation_sum[sample_cnt-i-1] = (cross_correlation_1[sample_cnt - i / 3 - 1] + cross_correlation_2[sample_cnt - i / 3 - 1] + cross_correlation_3[sample_cnt - i / 3 - 1] + cross_correlation_4[sample_cnt - i / 1.5 - 1] + cross_correlation_5[sample_cnt - i / 1.5 - 1] + cross_correlation_6[sample_cnt - i - 1]) / 6.0;
+            }
+
+            double white_0_cc = cross_correlation_sum[0];
             cross_correlation_sum[0] = cross_correlation_sum[0] - white_cc;
-            cross_correlation_sum[1] = cross_correlation_sum[1] - white_cc / 2;
-            cross_correlation_sum[sample_cnt - 1] = cross_correlation_sum[sample_cnt - 1] - white_cc / 2;
+            // cross_correlation_sum[1] = cross_correlation_sum[1] - white_cc / 2;
+            // cross_correlation_sum[sample_cnt - 1] = cross_correlation_sum[sample_cnt - 1] - white_cc / 2;
             /*
              * Shift the values in xcorr[] so that the 0th lag is at the center of
              * the output array.
@@ -194,10 +209,33 @@ namespace zo
 
             arg_max[0] = (max_index - newmargin) / 3.0;
             arg_max[1] = *std::max_element(shifted.begin() + start_i, shifted.begin() + start_i + len);
-            arg_max[2] = volume_index;
+            arg_max[2] = white_0_cc;
+
+            // the second source
+            shifted[sample_cnt / 2 - newmargin + max_index] = -10;
+
+            max_index = std::distance(shifted.begin() + start_i, std::max_element(shifted.begin() + start_i, shifted.begin() + start_i + len));
+
+            arg_max[3] = (max_index - newmargin) / 3.0;
+            arg_max[4] = *std::max_element(shifted.begin() + start_i, shifted.begin() + start_i + len);
+
             if (arg_max[1] < confidence_CC_THRESHOLD)
             {
                 arg_max[0] = -20;
+            }
+            if (arg_max[4] < confidence_CC_THRESHOLD)
+            {
+                arg_max[3] = -20;
+            }
+
+            // omit fake 0deg
+            if ((abs(arg_max[0]) < 0.0001) && ((cross_correlation_sum[1] < 0) && (cross_correlation_sum[sample_cnt - 1] < 0)))
+            {
+                arg_max[0] = -20;
+            }
+            if ((abs(arg_max[3]) < 0.0001) && ((cross_correlation_sum[1] < 0) && (cross_correlation_sum[sample_cnt - 1] < 0)))
+            {
+                arg_max[3] = -20;
             }
         }
         void PHAT_SRP_3mic(Wave1234 *wave1234, int margin, double *arg_max, double white_cc)
@@ -324,7 +362,6 @@ namespace zo
                 arg_max[0] = -20;
             }
         }
-
         void PHAT_SRP_2mic_times_4(Wave1234 *wave1234, int margin, double *arg_max, double white_cc)
         {
 
