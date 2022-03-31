@@ -4,6 +4,7 @@ WaveSignalProcess::WaveSignalProcess()
 {
     theta_right_sum = 0;
     theta_filtered_right_sum = 0;
+    accuracy_num = 0;
 }
 
 void WaveSignalProcess::show_delay()
@@ -54,8 +55,9 @@ double WaveSignalProcess::get_volume(std::vector<float> &wav_vector)
     }
     return sum / RANGE * 100;
 }
-void WaveSignalProcess::show_accuracy(int reference_angle, int number)
+void WaveSignalProcess::show_accuracy(int reference_angle)
 {
+    accuracy_num++;
     if (abs(theta - reference_angle) < 5)
     {
         theta_right_sum++;
@@ -65,6 +67,6 @@ void WaveSignalProcess::show_accuracy(int reference_angle, int number)
         theta_filtered_right_sum++;
     }
 
-    cout << "\n\n##accuracy: " << theta_right_sum / number * 100 << "%\n";
-    cout << "##accuracy: " << theta_filtered_right_sum / number * 100 << "%\n\n";
+    cout << "\n\n##accuracy: " << theta_right_sum / accuracy_num * 100 << "%\n";
+    cout << "##accuracy: " << theta_filtered_right_sum / accuracy_num * 100 << "%\n\n";
 }

@@ -36,9 +36,10 @@ public:
     void show_delay();
     Delay1234 delay1234;
     double get_theta(double delay);
-    void show_accuracy(int reference_angle, int number);
+    void show_accuracy(int reference_angle);
     double theta;
     double theta_filtered;
+    float accuracy_num;
 
 private:
     float theta_right_sum;

@@ -34,7 +34,7 @@ int main()
     //  MUSIC music_doa(4, 1, RANGE, mic_distance);
 
     // if there is a obvious sound count
-    double no_obvious_sound_count = 0;
+    double no_obvious_sound_count = no_obvious_count_threshold;
     double obvious_sound_count = 0;
 
     // visualize object init
@@ -50,7 +50,7 @@ int main()
     // kalman init
     int n = 2; // Number of states
     int m = 1; // Number of measurements
-    double R_init = 5;
+    double R_init = 20;
     double dt = 1 / 4.5; // Time step
 
     Eigen::MatrixXd A(n, n); // System dynamics matrix
@@ -58,6 +58,7 @@ int main()
     Eigen::MatrixXd Q(n, n); // Process noise covariance
     Eigen::MatrixXd R(m, m); // Measurement noise covariance
     Eigen::MatrixXd P(n, n); // Estimate error covariance
+    Eigen::VectorXd y(m);    // measurments
 
     // Discrete LTI projectile motion, measuring position only
     A << 1, dt, 0, 1;
@@ -88,19 +89,18 @@ int main()
     for (int i = 0; i < 100000; i++)
     {
         // timer start
-        auto start = system_clock::now();
         double volume = -1;
         SP_tool.theta = -20;
         double target_band_amplitued = 0;
         double confidence_CC = 0;
 
-        no_obvious_sound_count = 0;
-
         Wave1234 *wavech1234;
 
         //@1st STEP measurement confidence and data select
-        while (volume < VOLUME_THRESHOLD)
+        while (volume <0 )
         {
+            auto start = system_clock::now();
+
 #ifndef ON_RKCHIP_FLAG
             wav_decoder.set_start_point((i + k) * RANGE / 2 + 43620);
 #else
@@ -121,95 +121,123 @@ int main()
             confidence_CC = delay_cc_white[1];
 
             // if there is no sound source at 0deg, regraded the cc at 0deg as white noise
-            if (delay != 0)
-            {
-                white_cc = delay_cc_white[2];
-            }
+
 #endif
+            // no obvious sound detect
+            if (no_obvious_sound_count > no_obvious_count_threshold)
+            {
+                vis_tool.write_angles_to_txt(-1000, -1000);
+                cout << "&&&&&&&&&&&&&&&&&&&&&\n****************\n";
+                if (obvious_sound_count == 0)
+                {
+                    SP_tool.theta_filtered = (3.5 - rand() % 8) * 20;
+
+                    KF.x_hat(0, 0) = SP_tool.theta_filtered;
+                }
+                if (obvious_sound_count > obvious_strict_sequence)
+                {
+                    obvious_sound_count = 0;
+                }
+            }
+            // update the deviation of measurment data
+            R << R_init / confidence_CC;
 
             // get the theta through delays
             SP_tool.get_theta(delay);
-            if ((abs(SP_tool.theta - SP_tool.theta_filtered) > 20) || (delay == -20))
+            if ((abs(SP_tool.theta - SP_tool.theta_filtered) > single_measure_tolerance) || (delay == -20) || (delay == 0))
             {
                 if (delay_cc_white[3] != -20)
                 {
                     delay = delay_cc_white[3];
                     SP_tool.get_theta(delay);
-                    if (abs(SP_tool.theta - SP_tool.theta_filtered) > 20)
+                    if (abs(SP_tool.theta - SP_tool.theta_filtered) > single_measure_tolerance)
                     {
                         delay = -20;
+                        KF.R << 1e10;
+                        SP_tool.theta = -120;
+                        obvious_sound_count = 0;
                     }
                 }
                 else
                 {
                     delay = -20;
+                    KF.R << 1e10;
+                    SP_tool.theta = -120;
+                    obvious_sound_count = 0;
                 }
             }
-            Eigen::VectorXd y(m);
+
+            if (delay != 0)
+            {
+                white_cc = delay_cc_white[2];
+                deg_0_count = 0;
+            }
+            else
+            {
+                deg_0_count++;
+                if (deg_0_count < 2)
+                {
+                    delay = -20;
+                    KF.R << 1e10;
+                    SP_tool.theta = -120;
+                    obvious_sound_count = 0;
+                }
+            }
+            if (delay != -20)
+            {
+                obvious_sound_count++;
+            }
+            if ((no_obvious_sound_count > no_obvious_count_threshold) && (obvious_sound_count < obvious_strict_sequence))
+            {
+                delay = -20;
+                KF.R << 1e10;
+                SP_tool.theta = -120;
+                no_obvious_sound_count = no_obvious_count_threshold + 2;
+            }
+            if (obvious_sound_count > obvious_strict_sequence - 1)
+            {
+                no_obvious_sound_count = 0;
+            }
 
             t += dt;
             if (SP_tool.theta != -2000) // if theta is NAN, do not pass it to kalman filter
             {
-                if (SP_tool.theta == 0)
-                {
-                    deg_0_count++;
-                }
-                else
-                {
-                    deg_0_count = 0;
-                }
-                if ((SP_tool.theta == 0) && (deg_0_count > 2))
-                {
-                    y << 0;
-                }
-                else if (SP_tool.theta != 0)
-                {
-                    y << SP_tool.theta;
-                }
-                // update the deviation of measurment data
-                R << R_init / confidence_CC;
+
+                y << SP_tool.theta;
             }
             no_obvious_sound_count++;
-            if (delay != -20)
-            {
-                KF.update(y, dt, A, R);
-            }
-            else
+
+            KF.update(y, dt, A, R);
+
+            if (delay == -20)
             {
                 volume = -20;
             }
-            if (no_obvious_sound_count > no_obvious_count_threshold)
-            {
-                vis_tool.write_angles_to_txt(-1000, -1000);
-                cout << "&&&&&&&&&&&&&&&&&&&&&\n****************\n";
-                obvious_sound_count = 0;
-                SP_tool.theta_filtered = (2 - rand() % 5) * 30;
-            }
+
             // cout << "\nwhite_cc$$$$$$$: " << white_cc << endl;
+
+            //@2nd STEP choosen data feeds kalman model
+
+            SP_tool.theta_filtered = (KF.state())[0];
+
+            // timer end
+            auto end = system_clock::now();
+            auto duration = duration_cast<microseconds>(end - start);
+            double duration_time = double(duration.count()) * microseconds::period::num / microseconds::period::den;
+            //@ 3rd STEP update kalman due to time interval
+            A(0, 1) = duration_time;
+            dt = duration_time;
+
+            if (no_obvious_sound_count < no_obvious_count_threshold)
+            {
+                // for accuracy calculation
+                SP_tool.show_accuracy(refernce_angle);
+                // visualize
+                vis_tool.write_angles_to_txt(SP_tool.theta, SP_tool.theta_filtered);
+                // print
+                cout << left << setw(7) << "theta@@: " << left << setw(12) << SP_tool.theta << left << setw(7) << "filtered: " << left << setw(12) << SP_tool.theta_filtered << left << setw(5) << "num:" << SP_tool.accuracy_num << left << setw(13) << "   sample_fre: " << 1 / duration_time << "Hz\n";
+                cout << "confidence_CC$$$$$$$: " << confidence_CC << endl;
+            }
         }
-
-        //@2nd STEP choosen data feeds kalman model
-
-        SP_tool.theta_filtered = (KF.state())[0];
-
-        // for accuracy calculation
-        // SP_tool.show_accuracy(refernce_angle, i + 1);
-
-        cout << "confidence_CC$$$$$$$: " << confidence_CC << endl;
-
-        // visualize
-        vis_tool.write_angles_to_txt(SP_tool.theta, SP_tool.theta_filtered);
-
-        // timer end
-        auto end = system_clock::now();
-        auto duration = duration_cast<microseconds>(end - start);
-        double duration_time = double(duration.count()) * microseconds::period::num / microseconds::period::den;
-
-        // print
-        cout << left << setw(7) << "theta@@: " << left << setw(12) << SP_tool.theta << left << setw(7) << "filtered: " << left << setw(12) << SP_tool.theta_filtered << left << setw(5) << "num:" << i << left << setw(13) << "   sample_fre: " << 1 / duration_time << "Hz\n";
-
-        //@ 3rd STEP update kalman due to time interval
-        A(0, 1) = duration_time;
-        dt = duration_time;
     }
 }
