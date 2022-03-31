@@ -171,12 +171,20 @@ namespace zo
             for (int i = 0; i < sample_cnt / 2; i++)
             {
                 // cross_correlation_3[i]
-                cross_correlation_sum[i] = (cross_correlation_1[(i +2)/ 3] + cross_correlation_2[(i +2) / 3] + cross_correlation_3[(i +2)/ 3] + cross_correlation_4[(i +1) / 1.5] + cross_correlation_5[(i+1) / 1.5] + cross_correlation_6[i]) / 6.0;
-                cross_correlation_sum[sample_cnt-i-1] = (cross_correlation_1[sample_cnt - i / 3 - 1] + cross_correlation_2[sample_cnt - i / 3 - 1] + cross_correlation_3[sample_cnt - i / 3 - 1] + cross_correlation_4[sample_cnt - i / 1.5 - 1] + cross_correlation_5[sample_cnt - i / 1.5 - 1] + cross_correlation_6[sample_cnt - i - 1]) / 6.0;
+                cross_correlation_sum[i] = (cross_correlation_1[(i + 2) / 3] + cross_correlation_2[(i + 2) / 3] + cross_correlation_3[(i + 2) / 3] + cross_correlation_4[(int)((i + 1) / 1.5)] + cross_correlation_5[(int)((i + 1) / 1.5)] + cross_correlation_6[i]) / 6.0;
+
+                cross_correlation_sum[sample_cnt - i - 1] = (cross_correlation_1[sample_cnt - i / 3 - 1] + cross_correlation_2[sample_cnt - i / 3 - 1] + cross_correlation_3[sample_cnt - i / 3 - 1] + cross_correlation_4[sample_cnt - (int)(i / 1.5) - 1] + cross_correlation_5[sample_cnt - (int)(i / 1.5) - 1] + cross_correlation_6[sample_cnt - i - 1]) / 6.0;
             }
 
             double white_0_cc = cross_correlation_sum[0];
             cross_correlation_sum[0] = cross_correlation_sum[0] - white_cc;
+
+
+// gain to 90deg 
+            cross_correlation_sum[14] *= 1.1;
+            cross_correlation_sum[sample_cnt - 14] *= 1.1;
+            cross_correlation_sum[15] *= 1.2;
+            cross_correlation_sum[sample_cnt - 15] *= 1.2;
             // cross_correlation_sum[1] = cross_correlation_sum[1] - white_cc / 2;
             // cross_correlation_sum[sample_cnt - 1] = cross_correlation_sum[sample_cnt - 1] - white_cc / 2;
             /*

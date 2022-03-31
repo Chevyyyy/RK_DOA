@@ -93,7 +93,6 @@ int main()
         SP_tool.theta = -20;
         double target_band_amplitued = 0;
         double confidence_CC = 0;
-        
 
         no_obvious_sound_count = 0;
 
@@ -130,7 +129,7 @@ int main()
 
             // get the theta through delays
             SP_tool.get_theta(delay);
-            if ((abs(SP_tool.theta - SP_tool.theta_filtered) > 20)||(delay==-20))
+            if ((abs(SP_tool.theta - SP_tool.theta_filtered) > 20) || (delay == -20))
             {
                 if (delay_cc_white[3] != -20)
                 {
@@ -140,6 +139,10 @@ int main()
                     {
                         delay = -20;
                     }
+                }
+                else
+                {
+                    delay = -20;
                 }
             }
             Eigen::VectorXd y(m);
