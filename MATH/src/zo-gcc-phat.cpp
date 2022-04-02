@@ -46,19 +46,20 @@ namespace zo
             std::vector<float> reA(sample_cnt / 2);
             std::vector<float> imA(sample_cnt / 2);
             fft.fft(siga.data(), reA.data(), imA.data());
-            double sum = 0;
+            double speech_band_sum = 0;
+            double all_band_sum = 0;
             for (int i = 0; i < sample_cnt / 2; i++)
             {
 
                 siga_fft[i] = reA[i] + I * imA[i];
                 siga_fft[sample_cnt - i - 1] = reA[i] + I * imA[i];
 
-                if ((i > 1) && (i < 12))
+                if ((i > 0) && (i < 10))
                 {
-                    sum += (reA[i] * reA[i] + imA[i] * imA[i]) / RANGE;
+                    speech_band_sum += (reA[i] * reA[i] + imA[i] * imA[i]);
                 }
+                all_band_sum += (reA[i] * reA[i] + imA[i] * imA[i]);
             }
-            sum = log10(sum);
 
             std::vector<std::complex<float>> sigb_fft(sample_cnt);
             std::vector<float> reB(sample_cnt / 2);
@@ -129,8 +130,7 @@ namespace zo
 
             arg_max[0] = max_index - newmargin;
             arg_max[1] = *std::max_element(shifted.begin() + start_i, shifted.begin() + start_i + len) / RANGE;
-            arg_max[2] = sum;
-            volume_index = arg_max[1];
+            target_band_ratio = speech_band_sum / all_band_sum;
         }
         void PHAT_SRP_4mic(Wave1234 *wave1234, int margin, double *arg_max, double white_cc)
         {
@@ -155,12 +155,6 @@ namespace zo
             execute(wave1234->ch3, wave1234->ch4, 5, arg_max);
             std::vector<float> cross_correlation_3(cross_correlation);
 
-            for (int i = 0; i < sample_cnt; i++)
-            {
-                // cross_correlation_3[i]
-                cross_correlation_sum[i] = (cross_correlation_1[i] + cross_correlation_2[i] + cross_correlation_3[i]) / 3.0;
-            }
-
             execute(wave1234->ch1, wave1234->ch3, 10, arg_max);
             std::vector<float> cross_correlation_4(cross_correlation);
             execute(wave1234->ch2, wave1234->ch4, 10, arg_max);
@@ -171,20 +165,21 @@ namespace zo
             for (int i = 0; i < sample_cnt / 2; i++)
             {
                 // cross_correlation_3[i]
-                cross_correlation_sum[i] = (cross_correlation_1[(i + 2) / 3] + cross_correlation_2[(i + 2) / 3] + cross_correlation_3[(i + 2) / 3] + cross_correlation_4[(int)((i + 1) / 1.5)] + cross_correlation_5[(int)((i + 1) / 1.5)] + cross_correlation_6[i]) / 6.0;
-
-                cross_correlation_sum[sample_cnt - i - 1] = (cross_correlation_1[sample_cnt - i / 3 - 1] + cross_correlation_2[sample_cnt - i / 3 - 1] + cross_correlation_3[sample_cnt - i / 3 - 1] + cross_correlation_4[sample_cnt - (int)(i / 1.5) - 1] + cross_correlation_5[sample_cnt - (int)(i / 1.5) - 1] + cross_correlation_6[sample_cnt - i - 1]) / 6.0;
+                cross_correlation_sum[i] = (cross_correlation_1[(i + 2) / 3] + cross_correlation_2[(i + 2) / 3] + cross_correlation_3[(i + 2) / 3] + cross_correlation_4[(int)((i + 0.5) / 1.5)] + cross_correlation_5[(int)((i + 0.5) / 1.5)] + cross_correlation_6[i]) / 6.0;
+                if (i > 0)
+                {
+                    cross_correlation_sum[sample_cnt - i ] = (cross_correlation_1[sample_cnt - (i + 2) / 3 ] + cross_correlation_2[sample_cnt - (i + 2) / 3 ] + cross_correlation_3[sample_cnt - (i + 2) / 3 ] + cross_correlation_4[sample_cnt  - (int)((i + 0.5) / 1.5)] + cross_correlation_5[sample_cnt  - (int)((i + 0.5) / 1.5)] + cross_correlation_6[sample_cnt - i ]) / 6.0;
+                }
             }
 
             double white_0_cc = cross_correlation_sum[0];
             cross_correlation_sum[0] = cross_correlation_sum[0] - white_cc;
 
-
-// gain to 90deg 
-            cross_correlation_sum[14] *= 1.1;
-            cross_correlation_sum[sample_cnt - 14] *= 1.1;
+            //90deg gain
             cross_correlation_sum[15] *= 1.2;
-            cross_correlation_sum[sample_cnt - 15] *= 1.2;
+            cross_correlation_sum[sample_cnt-15] *= 1.3;
+
+
             // cross_correlation_sum[1] = cross_correlation_sum[1] - white_cc / 2;
             // cross_correlation_sum[sample_cnt - 1] = cross_correlation_sum[sample_cnt - 1] - white_cc / 2;
             /*
@@ -226,6 +221,8 @@ namespace zo
 
             arg_max[3] = (max_index - newmargin) / 3.0;
             arg_max[4] = *std::max_element(shifted.begin() + start_i, shifted.begin() + start_i + len);
+
+            arg_max[5] = target_band_ratio;
 
             if (arg_max[1] < confidence_CC_THRESHOLD)
             {

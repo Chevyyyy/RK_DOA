@@ -93,11 +93,12 @@ int main()
         SP_tool.theta = -20;
         double target_band_amplitued = 0;
         double confidence_CC = 0;
+        double speech_ratio = 0;
 
         Wave1234 *wavech1234;
 
         //@1st STEP measurement confidence and data select
-        while (volume <0 )
+        while (volume < 0)
         {
             auto start = system_clock::now();
 
@@ -109,16 +110,18 @@ int main()
             k++;
             wav_decoder.read_wav_file();
             // calculate the volume of a period of sound
-            wavech1234 = wav_decoder.wave_to_chs(SHOW_RAW_DATA);
+            wav_decoder.wave_to_chs(SHOW_RAW_DATA);
+            wavech1234 = wav_decoder.hamming();
             volume = SP_tool.get_volume(wavech1234->ch1);
 
 #ifdef PHAT_SPR
             // PHAT-SPR
-            double delay_cc_white[5];
-            gcc_phat->PHAT_SRP_4mic(wavech1234, 5, delay_cc_white, white_cc);
-            double delay = delay_cc_white[0];
+            double delay_cc_white_second_cc_ratio[6];
+            gcc_phat->PHAT_SRP_4mic(wavech1234, 5, delay_cc_white_second_cc_ratio, 0);
+            double delay = delay_cc_white_second_cc_ratio[0];
 
-            confidence_CC = delay_cc_white[1];
+            confidence_CC = delay_cc_white_second_cc_ratio[1];
+            speech_ratio = delay_cc_white_second_cc_ratio[5] * 100;
 
             // if there is no sound source at 0deg, regraded the cc at 0deg as white noise
 
@@ -130,7 +133,7 @@ int main()
                 cout << "&&&&&&&&&&&&&&&&&&&&&\n****************\n";
                 if (obvious_sound_count == 0)
                 {
-                    SP_tool.theta_filtered = (3.5 - rand() % 8) * 20;
+                    SP_tool.theta_filtered = SP_tool.get_theta(delay);
 
                     KF.x_hat(0, 0) = SP_tool.theta_filtered;
                 }
@@ -146,9 +149,9 @@ int main()
             SP_tool.get_theta(delay);
             if ((abs(SP_tool.theta - SP_tool.theta_filtered) > single_measure_tolerance) || (delay == -20) || (delay == 0))
             {
-                if (delay_cc_white[3] != -20)
+                if (delay_cc_white_second_cc_ratio[3] != -20)
                 {
-                    delay = delay_cc_white[3];
+                    delay = delay_cc_white_second_cc_ratio[3];
                     SP_tool.get_theta(delay);
                     if (abs(SP_tool.theta - SP_tool.theta_filtered) > single_measure_tolerance)
                     {
@@ -169,13 +172,13 @@ int main()
 
             if (delay != 0)
             {
-                white_cc = delay_cc_white[2];
+                white_cc = delay_cc_white_second_cc_ratio[2];
                 deg_0_count = 0;
             }
             else
             {
                 deg_0_count++;
-                if (deg_0_count < 2)
+                if (deg_0_count < 1)
                 {
                     delay = -20;
                     KF.R << 1e10;
@@ -187,6 +190,24 @@ int main()
             {
                 obvious_sound_count++;
             }
+
+#ifdef Track_speech_flag
+            if ((speech_ratio < speech_ratio_threshold + 5) && (obvious_sound_count < obvious_strict_sequence))
+            {
+                delay = -20;
+                KF.R << 1e10;
+                SP_tool.theta = -120;
+                obvious_sound_count = 0;
+            }
+            else if ((speech_ratio < speech_ratio_threshold) && (obvious_sound_count > obvious_strict_sequence - 1))
+            {
+                delay = -20;
+                KF.R << 1e10;
+                SP_tool.theta = -120;
+                obvious_sound_count = 0;
+            }
+#endif
+
             if ((no_obvious_sound_count > no_obvious_count_threshold) && (obvious_sound_count < obvious_strict_sequence))
             {
                 delay = -20;
@@ -202,7 +223,6 @@ int main()
             t += dt;
             if (SP_tool.theta != -2000) // if theta is NAN, do not pass it to kalman filter
             {
-
                 y << SP_tool.theta;
             }
             no_obvious_sound_count++;
@@ -230,13 +250,15 @@ int main()
 
             if (no_obvious_sound_count < no_obvious_count_threshold)
             {
-                // for accuracy calculation
+// for accuracy calculation
+#ifndef ON_RKCHIP_FLAG
                 SP_tool.show_accuracy(refernce_angle);
+#endif
                 // visualize
                 vis_tool.write_angles_to_txt(SP_tool.theta, SP_tool.theta_filtered);
                 // print
-                cout << left << setw(7) << "theta@@: " << left << setw(12) << SP_tool.theta << left << setw(7) << "filtered: " << left << setw(12) << SP_tool.theta_filtered << left << setw(5) << "num:" << SP_tool.accuracy_num << left << setw(13) << "   sample_fre: " << 1 / duration_time << "Hz\n";
-                cout << "confidence_CC$$$$$$$: " << confidence_CC << endl;
+                cout << left << setw(7) << "theta@@: " << left << setw(7) << fixed << setprecision(2) << SP_tool.theta << left << setw(7) << "filtered: " << left << setw(8) << fixed << setprecision(2) << SP_tool.theta_filtered << left << setw(5) << "num:" << fixed << setprecision(2) << SP_tool.accuracy_num << left << setw(13) << "   sample_fre: " << left << setw(11) << fixed << setprecision(2) << 1 / duration_time << "Hz";
+                cout << left << setw(7) << "   CC: " << left << setw(9) << fixed << setprecision(2) << confidence_CC << left << setw(15) << "Speech_Ratio: " << left << setw(7) << fixed << setprecision(2) << speech_ratio << endl;
             }
         }
     }

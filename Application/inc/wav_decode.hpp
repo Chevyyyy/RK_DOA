@@ -87,6 +87,7 @@ public:
     void set_start_point(int set_value);
     void set_wav_path(char* path);
     void read_wav_file();
+    Wave1234 * hamming();
     Wave1234 *wave_to_chs(bool show_decoded_data);
 };
 

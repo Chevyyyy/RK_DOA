@@ -13,6 +13,7 @@ namespace zo
     public:
         std::vector<float> cross_correlation;
         double volume_index;
+        double target_band_ratio;
 
     public:
         /**
