@@ -9,6 +9,8 @@
  */
 
 #include <Eigen/Dense>
+#include "main.hpp"
+#include <cmath>
 
 #pragma once
 
@@ -59,6 +61,8 @@ public:
    */
   void update(const Eigen::VectorXd &y, double dt, const Eigen::MatrixXd A, const Eigen::MatrixXd R);
 
+  double Possiblity_of_coherent_source(double mean_m);
+
   /**
    * Return the current state and time.
    */
@@ -86,4 +90,7 @@ public:
 
   // Estimated states
   Eigen::VectorXd x_hat, x_hat_new;
+
+  // meausrments
+  double measure_val;
 };

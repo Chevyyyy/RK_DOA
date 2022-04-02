@@ -12,13 +12,25 @@
 
 //@brief: mode
 #define Track_speech_flag
-#define ON_RKCHIP_FLAG
-// #define VISUAL_QT_FLAG
+// #define ON_RKCHIP_FLAG
 
 
-//@brief: dataset
-//  #define refernce_angle 90
-//  #define train_path "../sound_data/labelled_dataset/30s_90deg_cafe.wav"
+
+
+//@brief: MATH algorithm & hyperparameters
+#define PHAT_SPR
+#define confidence_CC_THRESHOLD 0.095
+#define no_obvious_count_threshold 30
+#define speech_ratio_threshold 70
+#define single_measure_tolerance 1
+#define obvious_strict_sequence 2
+#define speed_attenuation_ratio 1
+
+
+
+//@brief: dataset (testing)
+ #define refernce_angle 90
+ #define train_path "../sound_data/labelled_dataset/30s_90deg_cafe.wav"
 
 // #define refernce_angle 45
 // #define train_path "../sound_data/labelled_dataset/30s_45deg_cafe.wav"
@@ -32,13 +44,9 @@
 // #define refernce_angle -30
 // #define train_path "../sound_data/labelled_dataset/10s_-30deg_speech.wav"
 
+// #define refernce_angle -30
+// #define train_path "../sound_data/labelled_dataset/10s_30deg_speech_0deg_music.wav"
 
-
-//@brief: MATH algorithm & hyperparameters
-#define PHAT_SPR
-#define confidence_CC_THRESHOLD 0.095
-#define no_obvious_count_threshold 30
-#define single_measure_tolerance 20
-#define obvious_strict_sequence 2
-#define speech_ratio_threshold 75
-
+//@brief: parameters (testing)
+#define Usleep_time 48000
+// #define VISUAL_QT_FLAG

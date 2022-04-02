@@ -13,7 +13,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     ui->setupUi(this);
     QTimer *timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(timerCallBack()));
-    timer->start(10);
+    timer->start(5);
 }
 
 MainWindow::~MainWindow()

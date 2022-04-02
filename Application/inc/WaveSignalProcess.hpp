@@ -39,7 +39,7 @@ public:
     void show_accuracy(int reference_angle);
     double theta;
     double theta_filtered;
-    float accuracy_num;
+    int accuracy_num;
 
 private:
     float theta_right_sum;

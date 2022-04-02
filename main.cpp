@@ -50,7 +50,7 @@ int main()
     // kalman init
     int n = 2; // Number of states
     int m = 1; // Number of measurements
-    double R_init = 20;
+    double R_init = 50;
     double dt = 1 / 4.5; // Time step
 
     Eigen::MatrixXd A(n, n); // System dynamics matrix
@@ -67,7 +67,7 @@ int main()
     // Reasonable covariance matrices
     Q << 0, 0, 0, 0.01;
     R << R_init;
-    P << 30, 1, 1, 1;
+    P << 1, 1, 1, 1;
 
     KalmanFilter KF(dt, A, C, Q, R, P);
 
@@ -94,6 +94,7 @@ int main()
         double target_band_amplitued = 0;
         double confidence_CC = 0;
         double speech_ratio = 0;
+        double possibility = 0;
 
         Wave1234 *wavech1234;
 
@@ -101,9 +102,10 @@ int main()
         while (volume < 0)
         {
             auto start = system_clock::now();
-
+            
 #ifndef ON_RKCHIP_FLAG
-            wav_decoder.set_start_point((i + k) * RANGE / 2 + 43620);
+            wav_decoder.set_start_point((i + k) * RANGE  + 43620);
+            usleep(Usleep_time);
 #else
             wav_decoder.record();
 #endif
@@ -143,21 +145,27 @@ int main()
                 }
             }
             // update the deviation of measurment data
-            R << R_init / confidence_CC;
+            R << R_init;
 
             // get the theta through delays
             SP_tool.get_theta(delay);
-            if ((abs(SP_tool.theta - SP_tool.theta_filtered) > single_measure_tolerance) || (delay == -20) || (delay == 0))
+            possibility = KF.Possiblity_of_coherent_source(SP_tool.theta)*100;
+
+            if ((possibility < single_measure_tolerance) || (delay == -20) || (delay == 0))
             {
+
                 if (delay_cc_white_second_cc_ratio[3] != -20)
                 {
                     delay = delay_cc_white_second_cc_ratio[3];
                     SP_tool.get_theta(delay);
-                    if (abs(SP_tool.theta - SP_tool.theta_filtered) > single_measure_tolerance)
+                    possibility = KF.Possiblity_of_coherent_source(SP_tool.theta)*100;
+
+                    if (possibility < single_measure_tolerance)
                     {
                         delay = -20;
                         KF.R << 1e10;
                         SP_tool.theta = -120;
+                        KF.C(0, 1) *= speed_attenuation_ratio;
                         obvious_sound_count = 0;
                     }
                 }
@@ -166,9 +174,12 @@ int main()
                     delay = -20;
                     KF.R << 1e10;
                     SP_tool.theta = -120;
+                    KF.C(0, 1) *= speed_attenuation_ratio;
+
                     obvious_sound_count = 0;
                 }
             }
+
 
             if (delay != 0)
             {
@@ -183,6 +194,7 @@ int main()
                     delay = -20;
                     KF.R << 1e10;
                     SP_tool.theta = -120;
+                    KF.C(0, 1) *= speed_attenuation_ratio;
                     obvious_sound_count = 0;
                 }
             }
@@ -192,11 +204,12 @@ int main()
             }
 
 #ifdef Track_speech_flag
-            if ((speech_ratio < speech_ratio_threshold + 5) && (obvious_sound_count < obvious_strict_sequence))
+            if ((speech_ratio < speech_ratio_threshold + 10) && (obvious_sound_count < obvious_strict_sequence))
             {
                 delay = -20;
                 KF.R << 1e10;
                 SP_tool.theta = -120;
+                KF.C(0, 1) *= speed_attenuation_ratio;
                 obvious_sound_count = 0;
             }
             else if ((speech_ratio < speech_ratio_threshold) && (obvious_sound_count > obvious_strict_sequence - 1))
@@ -204,6 +217,8 @@ int main()
                 delay = -20;
                 KF.R << 1e10;
                 SP_tool.theta = -120;
+                KF.C(0, 1) *= speed_attenuation_ratio;
+
                 obvious_sound_count = 0;
             }
 #endif
@@ -213,6 +228,8 @@ int main()
                 delay = -20;
                 KF.R << 1e10;
                 SP_tool.theta = -120;
+                KF.C(0, 1) *= speed_attenuation_ratio;
+
                 no_obvious_sound_count = no_obvious_count_threshold + 2;
             }
             if (obvious_sound_count > obvious_strict_sequence - 1)
@@ -257,8 +274,8 @@ int main()
                 // visualize
                 vis_tool.write_angles_to_txt(SP_tool.theta, SP_tool.theta_filtered);
                 // print
-                cout << left << setw(7) << "theta@@: " << left << setw(7) << fixed << setprecision(2) << SP_tool.theta << left << setw(7) << "filtered: " << left << setw(8) << fixed << setprecision(2) << SP_tool.theta_filtered << left << setw(5) << "num:" << fixed << setprecision(2) << SP_tool.accuracy_num << left << setw(13) << "   sample_fre: " << left << setw(11) << fixed << setprecision(2) << 1 / duration_time << "Hz";
-                cout << left << setw(7) << "   CC: " << left << setw(9) << fixed << setprecision(2) << confidence_CC << left << setw(15) << "Speech_Ratio: " << left << setw(7) << fixed << setprecision(2) << speech_ratio << endl;
+                cout << left << setw(7) << "theta@@: " << left << setw(7) << fixed << setprecision(2) << SP_tool.theta << left << setw(7) << "filtered: " << left << setw(8) << fixed << setprecision(2) << SP_tool.theta_filtered << left << setw(5) << "num:" << SP_tool.accuracy_num << left << setw(13) << "   sample_fre: " << left << setw(11) << fixed << setprecision(2) << 1 / duration_time << "Hz";
+                cout << left << setw(7) << "   CC: " << left << setw(9) << fixed << setprecision(2) << confidence_CC << left << setw(15) << "Speech_Ratio: " << left << setw(7) << fixed << setprecision(2) << speech_ratio << left << setw(10) << "coherent_p: " << possibility << endl;
             }
         }
     }

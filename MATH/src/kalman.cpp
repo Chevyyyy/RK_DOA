@@ -49,7 +49,6 @@ void KalmanFilter::update(const Eigen::VectorXd &y)
 
   if (!initialized)
     throw std::runtime_error("Filter is not initialized!");
-
   x_hat_new = A * x_hat;
   P = A * P * A.transpose() + Q;
   K = P * C.transpose() * (C * P * C.transpose() + R).inverse();
@@ -67,4 +66,14 @@ void KalmanFilter::update(const Eigen::VectorXd &y, double dt, const Eigen::Matr
   this->dt = dt;
   update(y);
   this->R = R;
+}
+
+double KalmanFilter::Possiblity_of_coherent_source(double mean_m)
+{
+  double interval = 1;
+  double std_m = sqrt(R(0, 0));
+  double std_c = sqrt(P(0, 0));
+  double mean_c = x_hat(0, 0);
+  double re = 1.0 / sqrt((2 * PI * (pow(std_m, 2) + pow(std_c, 2)))) * exp(-pow(mean_c - mean_m, 2) / (2.0 * pow(std_m, 2) + 2.0 * pow(std_c, 2)));
+  return re;
 }
