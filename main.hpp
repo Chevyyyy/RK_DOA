@@ -1,5 +1,10 @@
+
+
+void rk_config();
+
 //@brief: basic constant
 #define LPF_CUTOFF 100
+#define CHANNEL_NUM 4
 #define mic_distance 0.0345
 #define Vs 342 // speed of sound
 #define RANGE 512
@@ -12,25 +17,17 @@
 
 //@brief: mode
 #define Track_speech_flag
-// #define ON_RKCHIP_FLAG
-
-
-
+#define ON_RKCHIP_FLAG
 
 //@brief: MATH algorithm & hyperparameters
 #define PHAT_SPR
-#define confidence_CC_THRESHOLD 0.095
-#define no_obvious_count_threshold 30
-#define speech_ratio_threshold 70
-#define single_measure_tolerance 1
-#define obvious_strict_sequence 2
-#define speed_attenuation_ratio 1
+
 
 
 
 //@brief: dataset (testing)
- #define refernce_angle 90
- #define train_path "../sound_data/labelled_dataset/30s_90deg_cafe.wav"
+#define refernce_angle 90
+#define train_path "../sound_data/labelled_dataset/30s_90deg_cafe.wav"
 
 // #define refernce_angle 45
 // #define train_path "../sound_data/labelled_dataset/30s_45deg_cafe.wav"

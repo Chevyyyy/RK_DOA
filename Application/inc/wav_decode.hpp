@@ -7,6 +7,7 @@
 #include <cmath>
 #include <string>
 #include "main.hpp"
+#include "AlsaCaptureAudio.h"
 
 
 
@@ -68,7 +69,7 @@ typedef struct Wave_ch1234_format
 
 
 
-class wav_decode
+class wav_decode :public AlsaCaptureAudio
 {
 private:
     Wav wav;

@@ -15,6 +15,13 @@
 #include "WaveSignalProcess.hpp"
 #include "kalman.hpp"
 // #include "MUSIC.hpp"
+double confidence_CC_THRESHOLD;
+int no_obvious_count_threshold;
+int speech_ratio_threshold;
+int single_measure_tolerance;
+int obvious_strict_sequence;
+double speed_attenuation_ratio;
+double traking_speed_amplification;
 
 using namespace chrono;
 using namespace std;
@@ -22,16 +29,19 @@ int main()
 {
     cout << "let's start!" << endl;
 
+    // config through RK_config
+    rk_config();
+
     // wav decode object init
     wav_decode wav_decoder;
     wav_decoder.set_start_point(0);
 
+    // alsa record init
+    AlsaCaptureAudio alsaCaptureAudio;
+
     // GCCPHAT object init
     zo::GccPhat *gcc_phat = zo::GccPhat::create();
     gcc_phat->init(RANGE);
-
-    // MUSIC init
-    //  MUSIC music_doa(4, 1, RANGE, mic_distance);
 
     // if there is a obvious sound count
     double no_obvious_sound_count = no_obvious_count_threshold;
@@ -51,7 +61,7 @@ int main()
     int n = 2; // Number of states
     int m = 1; // Number of measurements
     double R_init = 50;
-    double dt = 1 / 4.5; // Time step
+    double dt = 1.0 / 90.0; // Time step
 
     Eigen::MatrixXd A(n, n); // System dynamics matrix
     Eigen::MatrixXd C(m, n); // Output matrix
@@ -102,24 +112,24 @@ int main()
         while (volume < 0)
         {
             auto start = system_clock::now();
-            
+
 #ifndef ON_RKCHIP_FLAG
-            wav_decoder.set_start_point((i + k) * RANGE  + 43620);
+            wav_decoder.set_start_point((i + k) * RANGE + 43620);
             usleep(Usleep_time);
+            wav_decoder.read_wav_file();
+            // calculate the volume of a period of sound
+            wav_decoder.wave_to_chs(SHOW_RAW_DATA);
 #else
             wav_decoder.record();
 #endif
             k++;
-            wav_decoder.read_wav_file();
-            // calculate the volume of a period of sound
-            wav_decoder.wave_to_chs(SHOW_RAW_DATA);
             wavech1234 = wav_decoder.hamming();
             volume = SP_tool.get_volume(wavech1234->ch1);
 
 #ifdef PHAT_SPR
             // PHAT-SPR
             double delay_cc_white_second_cc_ratio[6];
-            gcc_phat->PHAT_SRP_4mic(wavech1234, 5, delay_cc_white_second_cc_ratio, 0);
+            gcc_phat->PHAT_SRP_4mic(wavech1234, 5, delay_cc_white_second_cc_ratio, confidence_CC_THRESHOLD);
             double delay = delay_cc_white_second_cc_ratio[0];
 
             confidence_CC = delay_cc_white_second_cc_ratio[1];
@@ -137,7 +147,8 @@ int main()
                 {
                     SP_tool.theta_filtered = SP_tool.get_theta(delay);
 
-                    KF.x_hat(0, 0) = SP_tool.theta_filtered;
+                    KF.x_hat(0) = SP_tool.theta_filtered;
+                    KF.x_hat(1) = 0;
                 }
                 if (obvious_sound_count > obvious_strict_sequence)
                 {
@@ -149,7 +160,7 @@ int main()
 
             // get the theta through delays
             SP_tool.get_theta(delay);
-            possibility = KF.Possiblity_of_coherent_source(SP_tool.theta)*100;
+            possibility = KF.Possiblity_of_coherent_source(SP_tool.theta) * 100;
 
             if ((possibility < single_measure_tolerance) || (delay == -20) || (delay == 0))
             {
@@ -158,14 +169,14 @@ int main()
                 {
                     delay = delay_cc_white_second_cc_ratio[3];
                     SP_tool.get_theta(delay);
-                    possibility = KF.Possiblity_of_coherent_source(SP_tool.theta)*100;
+                    possibility = KF.Possiblity_of_coherent_source(SP_tool.theta) * 100;
 
                     if (possibility < single_measure_tolerance)
                     {
                         delay = -20;
                         KF.R << 1e10;
                         SP_tool.theta = -120;
-                        KF.C(0, 1) *= speed_attenuation_ratio;
+                        KF.x_hat(1) *= speed_attenuation_ratio;
                         obvious_sound_count = 0;
                     }
                 }
@@ -174,12 +185,11 @@ int main()
                     delay = -20;
                     KF.R << 1e10;
                     SP_tool.theta = -120;
-                    KF.C(0, 1) *= speed_attenuation_ratio;
+                    KF.x_hat(1) *= speed_attenuation_ratio;
 
                     obvious_sound_count = 0;
                 }
             }
-
 
             if (delay != 0)
             {
@@ -194,7 +204,7 @@ int main()
                     delay = -20;
                     KF.R << 1e10;
                     SP_tool.theta = -120;
-                    KF.C(0, 1) *= speed_attenuation_ratio;
+                    KF.x_hat(1) *= speed_attenuation_ratio;
                     obvious_sound_count = 0;
                 }
             }
@@ -209,7 +219,7 @@ int main()
                 delay = -20;
                 KF.R << 1e10;
                 SP_tool.theta = -120;
-                KF.C(0, 1) *= speed_attenuation_ratio;
+                KF.x_hat(1) *= speed_attenuation_ratio;
                 obvious_sound_count = 0;
             }
             else if ((speech_ratio < speech_ratio_threshold) && (obvious_sound_count > obvious_strict_sequence - 1))
@@ -217,7 +227,7 @@ int main()
                 delay = -20;
                 KF.R << 1e10;
                 SP_tool.theta = -120;
-                KF.C(0, 1) *= speed_attenuation_ratio;
+                KF.x_hat(1) *= speed_attenuation_ratio;
 
                 obvious_sound_count = 0;
             }
@@ -228,7 +238,7 @@ int main()
                 delay = -20;
                 KF.R << 1e10;
                 SP_tool.theta = -120;
-                KF.C(0, 1) *= speed_attenuation_ratio;
+                KF.x_hat(1) *= speed_attenuation_ratio;
 
                 no_obvious_sound_count = no_obvious_count_threshold + 2;
             }
@@ -237,7 +247,7 @@ int main()
                 no_obvious_sound_count = 0;
             }
 
-            t += dt;
+            t += dt * traking_speed_amplification;
             if (SP_tool.theta != -2000) // if theta is NAN, do not pass it to kalman filter
             {
                 y << SP_tool.theta;
@@ -278,5 +288,64 @@ int main()
                 cout << left << setw(7) << "   CC: " << left << setw(9) << fixed << setprecision(2) << confidence_CC << left << setw(15) << "Speech_Ratio: " << left << setw(7) << fixed << setprecision(2) << speech_ratio << left << setw(10) << "coherent_p: " << possibility << endl;
             }
         }
+    }
+}
+
+void rk_config()
+{
+    cout << "start configing" << endl;
+#ifdef ON_RKCHIP_FLAG
+    ifstream myfile("./RK_config");
+#else
+    ifstream myfile("../RK_config");
+#endif
+
+    string line;
+    int num_line = 0;
+    if (myfile.is_open())
+    {
+
+        while (getline(myfile, line))
+        {
+            num_line++;
+            cout << line << '\n';
+            if (num_line % 3 == 2)
+            {
+                switch (num_line / 3 + 1)
+                {
+                case 1:
+                    confidence_CC_THRESHOLD = stod(line);
+                    break;
+                case 2:
+                    no_obvious_count_threshold = stod(line);
+                    break;
+                case 3:
+                    speech_ratio_threshold = stoi(line);
+                    break;
+                case 4:
+                    single_measure_tolerance = stod(line);
+                    break;
+                case 5:
+                    obvious_strict_sequence = stoi(line);
+                    break;
+                case 6:
+                    speed_attenuation_ratio = stod(line);
+                    break;
+                case 7:
+                    traking_speed_amplification = stoi(line);
+                    break;
+
+                default:
+                    break;
+                }
+            }
+        }
+
+        myfile.close();
+    }
+    else
+    {
+        cout << "no config file" << endl;
+        exit(1);
     }
 }

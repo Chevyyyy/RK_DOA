@@ -15,8 +15,28 @@ wav_decode::wav_decode()
 }
 void wav_decode::record()
 {
-    string cmd = "arecord -D hw:0,0 -c 8 -r 44100 -s " + to_string(RANGE) + "  -f  S16_LE  --period-size=1024  --buffer-size=4096 /CHEVY_FYP/sound_data/test.wav &>a.log";
-    system(cmd.data());
+    // string cmd = "arecord -D hw:0,0 -c 8 -r 44100 -s " + to_string(RANGE) + "  -f  S16_LE  --period-size=1024  --buffer-size=4096 /CHEVY_FYP/sound_data/test.wav &>a.log";
+    // system(cmd.data());
+    int16_t *buffer = captureAudio();
+    for (int i = 0; i < 4 * RANGE; i++)
+    {
+        if (i % 4 == 0)
+        {
+            wave1234p.ch1[i/4] = *(buffer + i);
+        }
+        if (i % 4 == 1)
+        {
+            wave1234p.ch2[i/4] = *(buffer + i);
+        }
+        if (i % 4 == 2)
+        {
+            wave1234p.ch3[i/4] = *(buffer + i);
+        }
+        if (i % 4 == 3)
+        {
+            wave1234p.ch4[i/4] = *(buffer + i);
+        }
+    }
 }
 void wav_decode::read_wav_file()
 {
@@ -89,7 +109,7 @@ void wav_decode::set_wav_path(char *path)
     wav_path.assign(path);
 }
 
-Wave1234 * wav_decode::hamming()
+Wave1234 *wav_decode::hamming()
 {
     for (int i = 0; i < RANGE; i++)
     {

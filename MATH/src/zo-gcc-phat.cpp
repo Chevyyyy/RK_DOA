@@ -132,7 +132,7 @@ namespace zo
             arg_max[1] = *std::max_element(shifted.begin() + start_i, shifted.begin() + start_i + len) / RANGE;
             target_band_ratio = speech_band_sum / all_band_sum;
         }
-        void PHAT_SRP_4mic(Wave1234 *wave1234, int margin, double *arg_max, double white_cc)
+        void PHAT_SRP_4mic(Wave1234 *wave1234, int margin, double *arg_max, double confidence_CC_THRESHOLD)
         {
 
             float mean1 = std::accumulate(wave1234->ch1.begin(), wave1234->ch1.end(), 0) / sample_cnt;
@@ -173,7 +173,7 @@ namespace zo
             }
 
             double white_0_cc = cross_correlation_sum[0];
-            cross_correlation_sum[0] = cross_correlation_sum[0] - white_cc;
+            // cross_correlation_sum[0] = cross_correlation_sum[0] - white_cc;
 
             //90deg gain
             cross_correlation_sum[15] *= 1.2;
@@ -243,7 +243,7 @@ namespace zo
                 arg_max[3] = -20;
             }
         }
-        void PHAT_SRP_3mic(Wave1234 *wave1234, int margin, double *arg_max, double white_cc)
+        void PHAT_SRP_3mic(Wave1234 *wave1234, int margin, double *arg_max, double confidence_CC_THRESHOLD)
         {
             float mean1 = std::accumulate(wave1234->ch1.begin(), wave1234->ch1.end(), 0) / sample_cnt;
             float mean2 = std::accumulate(wave1234->ch2.begin(), wave1234->ch2.end(), 0) / sample_cnt;
@@ -271,9 +271,9 @@ namespace zo
             }
             arg_max[2] = cross_correlation_sum[0];
 
-            cross_correlation_sum[0] = cross_correlation_sum[0] - white_cc;
-            cross_correlation_sum[1] = cross_correlation_sum[1] - white_cc / 4;
-            cross_correlation_sum[sample_cnt - 1] = cross_correlation_sum[sample_cnt - 1] - white_cc / 4;
+            // cross_correlation_sum[0] = cross_correlation_sum[0] - white_cc;
+            // cross_correlation_sum[1] = cross_correlation_sum[1] - white_cc / 4;
+            // cross_correlation_sum[sample_cnt - 1] = cross_correlation_sum[sample_cnt - 1] - white_cc / 4;
             /*
              * Shift the values in xcorr[] so that the 0th lag is at the center of
              * the output array.
@@ -310,7 +310,7 @@ namespace zo
                 arg_max[0] = -20;
             }
         }
-        void PHAT_SRP_2mic(Wave1234 *wave1234, int margin, double *arg_max, double white_cc)
+        void PHAT_SRP_2mic(Wave1234 *wave1234, int margin, double *arg_max, double confidence_CC_THRESHOLD)
         {
             float mean1 = std::accumulate(wave1234->ch1.begin(), wave1234->ch1.end(), 0) / sample_cnt;
             float mean2 = std::accumulate(wave1234->ch2.begin(), wave1234->ch2.end(), 0) / sample_cnt;
@@ -327,7 +327,7 @@ namespace zo
             execute(wave1234->ch1, wave1234->ch2, 5, arg_max);
             std::vector<float> cross_correlation_sum(cross_correlation);
             double white_0_cc = cross_correlation_sum[0];
-            cross_correlation_sum[0] = cross_correlation_sum[0] - white_cc;
+            // cross_correlation_sum[0] = cross_correlation_sum[0] - white_cc;
             // cross_correlation_sum[1] = cross_correlation_sum[1] - white_cc / 4;
             // cross_correlation_sum[sample_cnt - 1] = cross_correlation_sum[sample_cnt - 1] - white_cc / 4;
             /*
@@ -367,7 +367,7 @@ namespace zo
                 arg_max[0] = -20;
             }
         }
-        void PHAT_SRP_2mic_times_4(Wave1234 *wave1234, int margin, double *arg_max, double white_cc)
+        void PHAT_SRP_2mic_times_4(Wave1234 *wave1234, int margin, double *arg_max, double confidence_CC_THRESHOLD)
         {
 
             float mean1 = std::accumulate(wave1234->ch1.begin(), wave1234->ch1.end(), 0) / sample_cnt;
@@ -405,7 +405,7 @@ namespace zo
                 // cross_correlation_3[i]
                 cross_correlation_sum[i] = (cross_correlation_1[i] + cross_correlation_2[i] + cross_correlation_3[i] + cross_correlation_4[i]) / 4;
             }
-            cross_correlation_sum[0] = cross_correlation_sum[0] - white_cc;
+            // cross_correlation_sum[0] = cross_correlation_sum[0] - white_cc;
             /*
              * Shift the values in xcorr[] so that the 0th lag is at the center of
              * the output array.
