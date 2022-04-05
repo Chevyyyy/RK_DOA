@@ -17,8 +17,8 @@
 // #include "MUSIC.hpp"
 double confidence_CC_THRESHOLD;
 int no_obvious_count_threshold;
-int speech_ratio_threshold;
-int single_measure_tolerance;
+double speech_ratio_threshold;
+double single_measure_tolerance;
 int obvious_strict_sequence;
 double speed_attenuation_ratio;
 double traking_speed_amplification;
@@ -96,8 +96,12 @@ int main()
     double sum_filtered = 0;
     double white_cc = 0;
     int deg_0_count = 0;
-    for (int i = 0; i < 100000; i++)
+    for (int i = 0; i < 10000000; i++)
     {
+        if(i%3000==0)
+        {
+            system("clear");
+        }
         // timer start
         double volume = -1;
         SP_tool.theta = -20;
@@ -162,7 +166,7 @@ int main()
             SP_tool.get_theta(delay);
             possibility = KF.Possiblity_of_coherent_source(SP_tool.theta) * 100;
 
-            if ((possibility < single_measure_tolerance) || (delay == -20) || (delay == 0))
+            if ((possibility < single_measure_tolerance) || (delay == -20))
             {
 
                 if (delay_cc_white_second_cc_ratio[3] != -20)
@@ -191,23 +195,25 @@ int main()
                 }
             }
 
-            if (delay != 0)
-            {
-                white_cc = delay_cc_white_second_cc_ratio[2];
-                deg_0_count = 0;
-            }
-            else
-            {
-                deg_0_count++;
-                if (deg_0_count < 1)
-                {
-                    delay = -20;
-                    KF.R << 1e10;
-                    SP_tool.theta = -120;
-                    KF.x_hat(1) *= speed_attenuation_ratio;
-                    obvious_sound_count = 0;
-                }
-            }
+            // if (delay != 0)
+            // {
+            //     white_cc = delay_cc_white_second_cc_ratio[2];
+            //     deg_0_count = 0;
+            // }
+            // else
+            // {
+            //     deg_0_count++;
+            //     if (deg_0_count < 1)
+            //     {
+            //         delay = -20;
+            //         KF.R << 1e10;
+            //         SP_tool.theta = -120;
+            //         KF.x_hat(1) *= speed_attenuation_ratio;
+            //         obvious_sound_count = 0;
+            //     }
+            // }
+
+            
             if (delay != -20)
             {
                 obvious_sound_count++;
@@ -317,10 +323,10 @@ void rk_config()
                     confidence_CC_THRESHOLD = stod(line);
                     break;
                 case 2:
-                    no_obvious_count_threshold = stod(line);
+                    no_obvious_count_threshold = stoi(line);
                     break;
                 case 3:
-                    speech_ratio_threshold = stoi(line);
+                    speech_ratio_threshold = stod(line);
                     break;
                 case 4:
                     single_measure_tolerance = stod(line);
@@ -332,7 +338,7 @@ void rk_config()
                     speed_attenuation_ratio = stod(line);
                     break;
                 case 7:
-                    traking_speed_amplification = stoi(line);
+                    traking_speed_amplification = stod(line);
                     break;
 
                 default:

@@ -168,17 +168,18 @@ namespace zo
                 cross_correlation_sum[i] = (cross_correlation_1[(i + 2) / 3] + cross_correlation_2[(i + 2) / 3] + cross_correlation_3[(i + 2) / 3] + cross_correlation_4[(int)((i + 0.5) / 1.5)] + cross_correlation_5[(int)((i + 0.5) / 1.5)] + cross_correlation_6[i]) / 6.0;
                 if (i > 0)
                 {
-                    cross_correlation_sum[sample_cnt - i ] = (cross_correlation_1[sample_cnt - (i + 2) / 3 ] + cross_correlation_2[sample_cnt - (i + 2) / 3 ] + cross_correlation_3[sample_cnt - (i + 2) / 3 ] + cross_correlation_4[sample_cnt  - (int)((i + 0.5) / 1.5)] + cross_correlation_5[sample_cnt  - (int)((i + 0.5) / 1.5)] + cross_correlation_6[sample_cnt - i ]) / 6.0;
+                    cross_correlation_sum[sample_cnt - i] = (cross_correlation_1[sample_cnt - (i + 2) / 3] + cross_correlation_2[sample_cnt - (i + 2) / 3] + cross_correlation_3[sample_cnt - (i + 2) / 3] + cross_correlation_4[sample_cnt - (int)((i + 0.5) / 1.5)] + cross_correlation_5[sample_cnt - (int)((i + 0.5) / 1.5)] + cross_correlation_6[sample_cnt - i]) / 6.0;
                 }
             }
 
             double white_0_cc = cross_correlation_sum[0];
             // cross_correlation_sum[0] = cross_correlation_sum[0] - white_cc;
 
-            //90deg gain
-            cross_correlation_sum[15] *= 1.2;
-            cross_correlation_sum[sample_cnt-15] *= 1.3;
-
+            // 90deg gain
+            // cross_correlation_sum[15] *= 2;
+            // cross_correlation_sum[sample_cnt - 15] *= 2;
+            // cross_correlation_sum[14] *= 1.5;
+            // cross_correlation_sum[sample_cnt - 14] *= 1.5;
 
             // cross_correlation_sum[1] = cross_correlation_sum[1] - white_cc / 2;
             // cross_correlation_sum[sample_cnt - 1] = cross_correlation_sum[sample_cnt - 1] - white_cc / 2;
@@ -189,6 +190,20 @@ namespace zo
              */
             std::vector<float> shifted;
             shift<float>(shifted, cross_correlation_sum);
+            std::vector<float> shifted_mid(shifted);
+
+            // smooth shifted cc list
+            // for (int i = 0; i < 20; i++)
+            // {
+            //     shifted_mid[sample_cnt / 2 - i] = shifted[sample_cnt / 2 - (i + 1)] + shifted[sample_cnt / 2 - (i)] + shifted[sample_cnt / 2 - (i - 1)];
+            //     shifted_mid[sample_cnt / 2 + i] = shifted[sample_cnt / 2 + (i + 1)] + shifted[sample_cnt / 2 + (i)] + shifted[sample_cnt / 2 + (i - 1)];
+            // }
+            // for (int i=0;i<20;i++)
+            // {
+            //     shifted[sample_cnt/2-i]=shifted_mid[sample_cnt/2-i]/3;
+            //     shifted[sample_cnt/2+i]=shifted_mid[sample_cnt/2+i]/3;
+
+            // }
 
             // First, make sure the margin is within the bounds of the computed lags
             int n = cross_correlation_sum.size();
@@ -234,11 +249,11 @@ namespace zo
             }
 
             // omit fake 0deg
-            if ((abs(arg_max[0]) < 0.0001) && ((cross_correlation_sum[1] < 0) && (cross_correlation_sum[sample_cnt - 1] < 0)))
+            if ((abs(arg_max[0]) < 0.0001) && ((cross_correlation_sum[1] < 0) || (cross_correlation_sum[sample_cnt - 1] < 0)))
             {
                 arg_max[0] = -20;
             }
-            if ((abs(arg_max[3]) < 0.0001) && ((cross_correlation_sum[1] < 0) && (cross_correlation_sum[sample_cnt - 1] < 0)))
+            if ((abs(arg_max[3]) < 0.0001) && ((cross_correlation_sum[1] < 0) || (cross_correlation_sum[sample_cnt - 1] < 0)))
             {
                 arg_max[3] = -20;
             }
