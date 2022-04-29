@@ -9,12 +9,6 @@
 #include "main.hpp"
 #include "AlsaCaptureAudio.h"
 
-
-
-
-
-
-
 typedef struct WAV_RIFF
 {
     /* chunk "riff" */
@@ -48,7 +42,7 @@ typedef struct WAV_data
     uint32_t Subchunk2Size; /* data size */
     /* sub-chunk-data */
 
-    int16_t block[SAMPLE_RATE*8*10];
+    int16_t block[SAMPLE_RATE * 4 * 10];
 } Data_t;
 
 typedef struct WAV_format
@@ -67,9 +61,7 @@ typedef struct Wave_ch1234_format
 
 } Wave1234;
 
-
-
-class wav_decode :public AlsaCaptureAudio
+class wav_decode : public AlsaCaptureAudio
 {
 private:
     Wav wav;
@@ -86,10 +78,12 @@ public:
 
     void record();
     void set_start_point(int set_value);
-    void set_wav_path(char* path);
+    void set_wav_path(const char *path);
     void read_wav_file();
-    Wave1234 * hamming();
-    Wave1234 *wave_to_chs(bool show_decoded_data);
+
+    Wave1234 *hamming();
+    Wave1234 *wave_to_chs_8c(bool show_decoded_data);
+    Wave1234 *wave_to_chs_4c(bool show_decoded_data);
 };
 
 #endif

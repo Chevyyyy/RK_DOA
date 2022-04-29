@@ -14,11 +14,13 @@ namespace zo
         int sample_cnt;
         audiofft::AudioFFT fft;
 
-        void init(const int cnt) override
+        void init(const int cnt, double low, double high) override
         {
 
             fft.init(cnt);
             sample_cnt = cnt;
+            band_low = low;
+            band_high = high;
         }
 
         void terminate() override
@@ -32,33 +34,41 @@ namespace zo
         void execute(const std::vector<float> &siga, const std::vector<float> &sigb, int margin, double *arg_max)
         {
 
-            double volumeA = 0;
-            double volumeB = 0;
-
-            for (int j = 0; j < sample_cnt; j++)
-            {
-                volumeA += siga[j] * siga[j] / sample_cnt;
-                volumeB += sigb[j] * sigb[j] / sample_cnt;
-            }
-
             std::complex<float> I = std::complex<float>(0, 1);
             std::vector<std::complex<float>> siga_fft(sample_cnt);
             std::vector<float> reA(sample_cnt / 2);
             std::vector<float> imA(sample_cnt / 2);
             fft.fft(siga.data(), reA.data(), imA.data());
+
+            std::vector<std::complex<float>> siga_noW_fft(sample_cnt);
+            std::vector<float> re_noW_A(sample_cnt / 2);
+            std::vector<float> im_noW_A(sample_cnt / 2);
+            fft.fft(wave1234_no_W->ch1.data(), re_noW_A.data(), im_noW_A.data());
+
             double speech_band_sum = 0;
             double all_band_sum = 0;
+            double low_i = band_low * RANGE / SAMPLE_RATE;
+            double high_i = band_high * RANGE / SAMPLE_RATE;
+
+            for (int i = 0; i < sample_cnt / 2; i++)
+            {
+
+                siga_noW_fft[i] = reA[i] + I * imA[i];
+                siga_noW_fft[sample_cnt - i - 1] = reA[i] + I * imA[i];
+
+                if ((i > low_i) && (i < high_i))
+                {
+                    speech_band_sum += (re_noW_A[i] * re_noW_A[i] + im_noW_A[i] * im_noW_A[i]);
+                }
+                all_band_sum += (re_noW_A[i] * re_noW_A[i] + im_noW_A[i] * im_noW_A[i]);
+            }
+
             for (int i = 0; i < sample_cnt / 2; i++)
             {
 
                 siga_fft[i] = reA[i] + I * imA[i];
                 siga_fft[sample_cnt - i - 1] = reA[i] + I * imA[i];
 
-                if ((i > 0) && (i < 10))
-                {
-                    speech_band_sum += (reA[i] * reA[i] + imA[i] * imA[i]);
-                }
-                all_band_sum += (reA[i] * reA[i] + imA[i] * imA[i]);
             }
 
             std::vector<std::complex<float>> sigb_fft(sample_cnt);
@@ -95,6 +105,11 @@ namespace zo
             {
                 reR[i] = R[i].real();
                 imR[i] = R[i].imag();
+                if ((i > high_i) || (i < (low_i+1)))
+                {
+                    reR[i] = 0;
+                    imR[i] = 0;
+                }
             }
 
             // calculate_inverse_fft(cross_correlation, R, n);
@@ -132,20 +147,10 @@ namespace zo
             arg_max[1] = *std::max_element(shifted.begin() + start_i, shifted.begin() + start_i + len) / RANGE;
             target_band_ratio = speech_band_sum / all_band_sum;
         }
-        void PHAT_SRP_4mic(Wave1234 *wave1234, int margin, double *arg_max, double confidence_CC_THRESHOLD)
+        void PHAT_SRP_4mic(Wave1234 *wave1234_no_window, Wave1234 *wave1234, int margin, double *arg_max, double confidence_CC_THRESHOLD)
         {
 
-            float mean1 = std::accumulate(wave1234->ch1.begin(), wave1234->ch1.end(), 0) / sample_cnt;
-            float mean2 = std::accumulate(wave1234->ch2.begin(), wave1234->ch2.end(), 0) / sample_cnt;
-            float mean3 = std::accumulate(wave1234->ch3.begin(), wave1234->ch3.end(), 0) / sample_cnt;
-            float mean4 = std::accumulate(wave1234->ch4.begin(), wave1234->ch4.end(), 0) / sample_cnt;
-            for (int i = 0; i < sample_cnt; i++)
-            {
-                wave1234->ch1[i] = wave1234->ch1[i] - mean1;
-                wave1234->ch2[i] = wave1234->ch2[i] - mean2;
-                wave1234->ch3[i] = wave1234->ch3[i] - mean3;
-                wave1234->ch4[i] = wave1234->ch4[i] - mean4;
-            }
+            wave1234_no_W = wave1234_no_window;
             std::vector<float> cross_correlation_sum(sample_cnt);
 
             execute(wave1234->ch1, wave1234->ch2, 5, arg_max);
@@ -175,19 +180,6 @@ namespace zo
             double white_0_cc = cross_correlation_sum[0];
             // cross_correlation_sum[0] = cross_correlation_sum[0] - white_cc;
 
-            // 90deg gain
-            // cross_correlation_sum[15] *= 2;
-            // cross_correlation_sum[sample_cnt - 15] *= 2;
-            // cross_correlation_sum[14] *= 1.5;
-            // cross_correlation_sum[sample_cnt - 14] *= 1.5;
-
-            // cross_correlation_sum[1] = cross_correlation_sum[1] - white_cc / 2;
-            // cross_correlation_sum[sample_cnt - 1] = cross_correlation_sum[sample_cnt - 1] - white_cc / 2;
-            /*
-             * Shift the values in xcorr[] so that the 0th lag is at the center of
-             * the output array.
-             * [Note: the index of the center value in the output will be: ceil(_N/2) ]
-             */
             std::vector<float> shifted;
             shift<float>(shifted, cross_correlation_sum);
             std::vector<float> shifted_mid(shifted);

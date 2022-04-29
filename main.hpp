@@ -1,49 +1,29 @@
 
 
-void rk_config();
+void rk_config();       
 
 //@brief: basic constant
 #define LPF_CUTOFF 100
 #define CHANNEL_NUM 4
 #define mic_distance 0.0345
-#define Vs 342 // speed of sound
-#define RANGE 512
-#define SAMPLE_RATE 44100
+#define Vs 340.0 // speed of sound
+#define RANGE 512*2
+#define SAMPLE_RATE 48000
 #define SHOW_RAW_DATA 0
-#define DELAY_MAX mic_distance / Vs *SAMPLE_RATE
-#define DELTA 1 / 44100.0
+#define DELAY_MAX mic_distance*SAMPLE_RATE / Vs 
 #define PI 3.1415926
-#define Degree_To_Rad(degree) degree *PI / 180
+#define Degree_To_Rad(degree) degree *PI / 180.0
 
 //@brief: mode
 #define Track_speech_flag
-#define ON_RKCHIP_FLAG
+// #define ON_RKCHIP_FLAG
 
 //@brief: MATH algorithm & hyperparameters
 #define PHAT_SPR
 
 
 
-
-//@brief: dataset (testing)
-#define refernce_angle 90
-#define train_path "../sound_data/labelled_dataset/30s_90deg_cafe.wav"
-
-// #define refernce_angle 45
-// #define train_path "../sound_data/labelled_dataset/30s_45deg_cafe.wav"
-
-// #define refernce_angle 64
-// #define train_path "../sound_data/labelled_dataset/30s_64deg_cafe.wav"
-
-// #define refernce_angle 25
-// #define train_path "../sound_data/labelled_dataset/10s_25deg_speech.wav"
-
-// #define refernce_angle -30
-// #define train_path "../sound_data/labelled_dataset/10s_-30deg_speech.wav"
-
-// #define refernce_angle -30
-// #define train_path "../sound_data/labelled_dataset/10s_30deg_speech_0deg_music.wav"
-
 //@brief: parameters (testing)
-#define Usleep_time 48000
+#define Usleep_time 7000
 // #define VISUAL_QT_FLAG
+

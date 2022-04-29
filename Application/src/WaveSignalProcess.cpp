@@ -22,26 +22,22 @@ double WaveSignalProcess::get_theta(double delay)
     if ((delay > -DELAY_MAX) && (delay < DELAY_MAX))
     {
         theta = 180 * asin((delay * Vs) / (SAMPLE_RATE * mic_distance)) / PI;
-        if (abs((delay * Vs) / (SAMPLE_RATE * mic_distance)) > 1)
-        {
-            return -2000;
-        }
     }
     else if ((delay > DELAY_MAX))
     {
         theta = 90 + 180 * asin(((delay - DELAY_MAX) * Vs) / (SAMPLE_RATE * mic_distance)) / PI;
-        if (abs(((delay - DELAY_MAX) * Vs) / (SAMPLE_RATE * mic_distance)) > 1)
-        {
-            return -2000;
-        }
     }
     else if ((delay < -DELAY_MAX))
     {
         theta = -90 + 180 * asin(((delay + DELAY_MAX) * Vs) / (SAMPLE_RATE * mic_distance)) / PI;
-        if (abs(((delay + DELAY_MAX) * Vs) / (SAMPLE_RATE * mic_distance)) > 1)
-        {
-            return -2000;
-        }
+    }
+    if (abs(theta) > -1e-9)
+    {
+        NAN;
+    }
+    else
+    {
+        theta = -2000;
     }
 
     return theta;

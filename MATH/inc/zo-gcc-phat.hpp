@@ -14,6 +14,9 @@ namespace zo
         std::vector<float> cross_correlation;
         double volume_index;
         double target_band_ratio;
+        double band_low;
+        double band_high;
+        Wave1234 *wave1234_no_W;
 
     public:
         /**
@@ -28,7 +31,7 @@ namespace zo
          *
          * @param sample_cnt The number of samples.
          */
-        virtual void init(const int sample_cnt) = 0;
+        virtual void init(const int sample_cnt, double low, double high) = 0;
 
         /**
          * @brief Terminate and cleanup instance
@@ -46,10 +49,10 @@ namespace zo
          * @return int "Tau" or distance signal is from refsignal
          */
         virtual void execute(const std::vector<float> &siga, const std::vector<float> &sigb, int margin, double *arg_max) = 0;
-        virtual void PHAT_SRP_3mic(Wave1234 *wave1234, int margin, double *arg_max,double confidence_CC_THRESHOLD) = 0;
-        virtual void PHAT_SRP_4mic(Wave1234 *wave1234, int margin, double *arg_max,double confidence_CC_THRESHOLD) = 0;
-        virtual void PHAT_SRP_2mic(Wave1234 *wave1234, int margin, double *arg_max,double confidence_CC_THRESHOLD) = 0;
-        virtual void PHAT_SRP_2mic_times_4(Wave1234 *wave1234, int margin, double *arg_max,double confidence_CC_THRESHOLD) = 0;
+        virtual void PHAT_SRP_3mic(Wave1234 *wave1234, int margin, double *arg_max, double confidence_CC_THRESHOLD) = 0;
+        virtual void PHAT_SRP_4mic(Wave1234 *wave1234_no_window,Wave1234 *wave1234, int margin, double *arg_max, double confidence_CC_THRESHOLD) = 0;
+        virtual void PHAT_SRP_2mic(Wave1234 *wave1234, int margin, double *arg_max, double confidence_CC_THRESHOLD) = 0;
+        virtual void PHAT_SRP_2mic_times_4(Wave1234 *wave1234, int margin, double *arg_max, double confidence_CC_THRESHOLD) = 0;
     };
 } // namespace zo
 

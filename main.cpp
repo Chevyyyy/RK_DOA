@@ -9,7 +9,6 @@
 #include "wav_decode.hpp"
 #include "zo-gcc-phat.hpp"
 #include "visualize.hpp"
-#include "LowPassFilter.hpp"
 #include <chrono>
 #include "main.hpp"
 #include "WaveSignalProcess.hpp"
@@ -22,6 +21,11 @@ double single_measure_tolerance;
 int obvious_strict_sequence;
 double speed_attenuation_ratio;
 double traking_speed_amplification;
+double volume_threshold;
+double Passband_Low;
+double Passband_High;
+double reference_angle;
+string train_path;
 
 using namespace chrono;
 using namespace std;
@@ -41,7 +45,7 @@ int main()
 
     // GCCPHAT object init
     zo::GccPhat *gcc_phat = zo::GccPhat::create();
-    gcc_phat->init(RANGE);
+    gcc_phat->init(RANGE, Passband_Low, Passband_High);
 
     // if there is a obvious sound count
     double no_obvious_sound_count = no_obvious_count_threshold;
@@ -53,9 +57,6 @@ int main()
 
     // wave signal processing object init
     WaveSignalProcess SP_tool;
-
-    // LPF init
-    LowPassFilter LPF(LPF_CUTOFF, DELTA);
 
     // kalman init
     int n = 2; // Number of states
@@ -88,7 +89,7 @@ int main()
     KF.init(t, x0);
 
 #ifndef ON_RKCHIP_FLAG
-    wav_decoder.set_wav_path(train_path);
+    wav_decoder.set_wav_path(train_path.data());
 #endif
 
     int k = 0;
@@ -98,7 +99,7 @@ int main()
     int deg_0_count = 0;
     for (int i = 0; i < 10000000; i++)
     {
-        if(i%3000==0)
+        if (i % 3000 == 0)
         {
             system("clear");
         }
@@ -109,31 +110,39 @@ int main()
         double confidence_CC = 0;
         double speech_ratio = 0;
         double possibility = 0;
+        double theta_output = 0;
 
         Wave1234 *wavech1234;
+        Wave1234 *wavech1234_no_window;
 
         //@1st STEP measurement confidence and data select
-        while (volume < 0)
+        while (volume < volume_threshold)
         {
             auto start = system_clock::now();
 
 #ifndef ON_RKCHIP_FLAG
-            wav_decoder.set_start_point((i + k) * RANGE + 43620);
+            int start_point = (i + k) * RANGE+SAMPLE_RATE*3;
+            if (start_point > SAMPLE_RATE * 10)
+            {
+                exit(1);
+            }
+            wav_decoder.set_start_point(start_point);
             usleep(Usleep_time);
             wav_decoder.read_wav_file();
             // calculate the volume of a period of sound
-            wav_decoder.wave_to_chs(SHOW_RAW_DATA);
+            wavech1234_no_window=wav_decoder.wave_to_chs_4c(SHOW_RAW_DATA);
 #else
             wav_decoder.record();
 #endif
             k++;
             wavech1234 = wav_decoder.hamming();
             volume = SP_tool.get_volume(wavech1234->ch1);
+            double volume1 = volume;
 
 #ifdef PHAT_SPR
             // PHAT-SPR
             double delay_cc_white_second_cc_ratio[6];
-            gcc_phat->PHAT_SRP_4mic(wavech1234, 5, delay_cc_white_second_cc_ratio, confidence_CC_THRESHOLD);
+            gcc_phat->PHAT_SRP_4mic(wavech1234_no_window,wavech1234, 5, delay_cc_white_second_cc_ratio, confidence_CC_THRESHOLD);
             double delay = delay_cc_white_second_cc_ratio[0];
 
             confidence_CC = delay_cc_white_second_cc_ratio[1];
@@ -150,7 +159,7 @@ int main()
                 if (obvious_sound_count == 0)
                 {
                     SP_tool.theta_filtered = SP_tool.get_theta(delay);
-
+                    theta_output = SP_tool.theta_filtered;
                     KF.x_hat(0) = SP_tool.theta_filtered;
                     KF.x_hat(1) = 0;
                 }
@@ -163,7 +172,8 @@ int main()
             R << R_init;
 
             // get the theta through delays
-            SP_tool.get_theta(delay);
+
+            theta_output = SP_tool.get_theta(delay);
             possibility = KF.Possiblity_of_coherent_source(SP_tool.theta) * 100;
 
             if ((possibility < single_measure_tolerance) || (delay == -20))
@@ -172,7 +182,7 @@ int main()
                 if (delay_cc_white_second_cc_ratio[3] != -20)
                 {
                     delay = delay_cc_white_second_cc_ratio[3];
-                    SP_tool.get_theta(delay);
+                    theta_output = SP_tool.get_theta(delay);
                     possibility = KF.Possiblity_of_coherent_source(SP_tool.theta) * 100;
 
                     if (possibility < single_measure_tolerance)
@@ -195,25 +205,6 @@ int main()
                 }
             }
 
-            // if (delay != 0)
-            // {
-            //     white_cc = delay_cc_white_second_cc_ratio[2];
-            //     deg_0_count = 0;
-            // }
-            // else
-            // {
-            //     deg_0_count++;
-            //     if (deg_0_count < 1)
-            //     {
-            //         delay = -20;
-            //         KF.R << 1e10;
-            //         SP_tool.theta = -120;
-            //         KF.x_hat(1) *= speed_attenuation_ratio;
-            //         obvious_sound_count = 0;
-            //     }
-            // }
-
-            
             if (delay != -20)
             {
                 obvious_sound_count++;
@@ -267,8 +258,6 @@ int main()
                 volume = -20;
             }
 
-            // cout << "\nwhite_cc$$$$$$$: " << white_cc << endl;
-
             //@2nd STEP choosen data feeds kalman model
 
             SP_tool.theta_filtered = (KF.state())[0];
@@ -285,12 +274,12 @@ int main()
             {
 // for accuracy calculation
 #ifndef ON_RKCHIP_FLAG
-                SP_tool.show_accuracy(refernce_angle);
+                SP_tool.show_accuracy(reference_angle);
 #endif
                 // visualize
                 vis_tool.write_angles_to_txt(SP_tool.theta, SP_tool.theta_filtered);
                 // print
-                cout << left << setw(7) << "theta@@: " << left << setw(7) << fixed << setprecision(2) << SP_tool.theta << left << setw(7) << "filtered: " << left << setw(8) << fixed << setprecision(2) << SP_tool.theta_filtered << left << setw(5) << "num:" << SP_tool.accuracy_num << left << setw(13) << "   sample_fre: " << left << setw(11) << fixed << setprecision(2) << 1 / duration_time << "Hz";
+                cout << "##" << left << setw(7) << k + i << left << setw(7) << "theta@@: " << left << setw(9) << fixed << setprecision(2) << theta_output << left << setw(7) << "filtered: " << left << setw(8) << fixed << setprecision(2) << SP_tool.theta_filtered << left << setw(5) << "Volume:" << left << setw(4) << volume1 << left << setw(13) << "   sample_fre: " << left << setw(5) << fixed << setprecision(0) << 1 / duration_time << "Hz";
                 cout << left << setw(7) << "   CC: " << left << setw(9) << fixed << setprecision(2) << confidence_CC << left << setw(15) << "Speech_Ratio: " << left << setw(7) << fixed << setprecision(2) << speech_ratio << left << setw(10) << "coherent_p: " << possibility << endl;
             }
         }
@@ -339,6 +328,21 @@ void rk_config()
                     break;
                 case 7:
                     traking_speed_amplification = stod(line);
+                    break;
+                case 8:
+                    volume_threshold = stod(line);
+                    break;
+                case 9:
+                    Passband_Low = stod(line);
+                    break;
+                case 10:
+                    Passband_High = stod(line);
+                    break;
+                case 11:
+                    reference_angle = stod(line);
+                    break;
+                case 12:
+                    train_path = line;
                     break;
 
                 default:

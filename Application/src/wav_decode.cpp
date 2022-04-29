@@ -22,19 +22,19 @@ void wav_decode::record()
     {
         if (i % 4 == 0)
         {
-            wave1234p.ch1[i/4] = *(buffer + i);
+            wave1234p.ch1[i / 4] = *(buffer + i);
         }
         if (i % 4 == 1)
         {
-            wave1234p.ch2[i/4] = *(buffer + i);
+            wave1234p.ch2[i / 4] = *(buffer + i);
         }
         if (i % 4 == 2)
         {
-            wave1234p.ch3[i/4] = *(buffer + i);
+            wave1234p.ch3[i / 4] = *(buffer + i);
         }
         if (i % 4 == 3)
         {
-            wave1234p.ch4[i/4] = *(buffer + i);
+            wave1234p.ch4[i / 4] = *(buffer + i);
         }
     }
 }
@@ -49,7 +49,33 @@ void wav_decode::read_wav_file()
     fread(&wav, 1, sizeof(wav), fp);
     fclose(fp);
 }
-Wave1234 *wav_decode::wave_to_chs(bool show_decoded_data)
+Wave1234 *wav_decode::wave_to_chs_4c(bool show_decoded_data)
+{
+    for (int i = wav_start_point * 4; i < RANGE * 4 + wav_start_point * 4; i++)
+    {
+        int16_t show = wav.data.block[i];
+        // int16_t show = (wav.data.block[i] >> 8) | (wav.data.block[i] << 8);
+
+        if ((i % 4 + 1) == 1)
+        {
+            wave1234p.ch1[i / 4 - wav_start_point] = show;
+        }
+        if ((i % 4 + 1) == 2)
+        {
+            wave1234p.ch2[i / 4 - wav_start_point] = show;
+        }
+        if ((i % 4 + 1) == 3)
+        {
+            wave1234p.ch3[i / 4 - wav_start_point] = show;
+        }
+        if ((i % 4 + 1) == 4)
+        {
+            wave1234p.ch4[i / 4 - wav_start_point] = show;
+        }
+    }
+    return &wave1234p;
+}
+Wave1234 *wav_decode::wave_to_chs_8c(bool show_decoded_data)
 {
 
     for (int i = wav_start_point * 8; i < RANGE * 8 + wav_start_point * 8; i++)
@@ -104,7 +130,7 @@ void wav_decode::set_start_point(int set_value)
 {
     wav_start_point = set_value;
 }
-void wav_decode::set_wav_path(char *path)
+void wav_decode::set_wav_path(const char *path)
 {
     wav_path.assign(path);
 }
