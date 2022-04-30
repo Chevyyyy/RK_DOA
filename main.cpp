@@ -136,7 +136,7 @@ int main()
 #endif
             k++;
             wavech1234 = wav_decoder.hamming();
-            volume = SP_tool.get_volume(wavech1234->ch1);
+            volume = SP_tool.get_volume(wavech1234_no_window->ch1);
             double volume1 = volume;
 
 #ifdef PHAT_SPR
@@ -280,7 +280,11 @@ int main()
                 vis_tool.write_angles_to_txt(SP_tool.theta, SP_tool.theta_filtered);
                 // print
                 cout << "##" << left << setw(7) << k + i << left << setw(7) << "theta@@: " << left << setw(9) << fixed << setprecision(2) << theta_output << left << setw(7) << "filtered: " << left << setw(8) << fixed << setprecision(2) << SP_tool.theta_filtered << left << setw(5) << "Volume:" << left << setw(4) << volume1 << left << setw(13) << "   sample_fre: " << left << setw(5) << fixed << setprecision(0) << 1 / duration_time << "Hz";
-                cout << left << setw(7) << "   CC: " << left << setw(9) << fixed << setprecision(2) << confidence_CC << left << setw(15) << "Speech_Ratio: " << left << setw(7) << fixed << setprecision(2) << speech_ratio << left << setw(10) << "coherent_p: " << possibility << endl;
+                cout << left << setw(7) << "   CC: " << left << setw(9) << fixed << setprecision(2) << confidence_CC << left << setw(15) << "Speech_Ratio: " << left << setw(7) << fixed << setprecision(2) << speech_ratio << left << setw(10) << "coherent_p: " << possibility;
+                if(volume>volume_threshold)
+                {
+                    cout << "  good!" << endl;
+                };
             }
         }
     }

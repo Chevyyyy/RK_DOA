@@ -137,12 +137,25 @@ void wav_decode::set_wav_path(const char *path)
 
 Wave1234 *wav_decode::hamming()
 {
+    Wave1234 copy = wave1234p;
+
     for (int i = 0; i < RANGE; i++)
     {
-        wave1234p.ch1[i] *= (0.54 - 0.46 * cos(2 * PI * i / RANGE));
-        wave1234p.ch2[i] *= (0.54 - 0.46 * cos(2 * PI * i / RANGE));
-        wave1234p.ch3[i] *= (0.54 - 0.46 * cos(2 * PI * i / RANGE));
-        wave1234p.ch4[i] *= (0.54 - 0.46 * cos(2 * PI * i / RANGE));
+        double a = 1;
+        double b = 0.9375;
+        double c = 0;
+        if (i > 1)
+        {
+            wave1234p.ch1[i] = a * copy.ch1[i] - b * copy.ch1[i - 1] - c * copy.ch1[i - 2];
+            wave1234p.ch2[i] = a * copy.ch2[i] - b * copy.ch2[i - 1] - c * copy.ch2[i - 2];
+            wave1234p.ch3[i] = a * copy.ch3[i] - b * copy.ch3[i - 1] - c * copy.ch3[i - 2];
+            wave1234p.ch4[i] = a * copy.ch4[i] - b * copy.ch4[i - 1] - c * copy.ch4[i - 2];
+        }
+
+        wave1234p.ch1[i] *= (0.5 - 0.5 * cos(2 * PI * i / (RANGE - 1)));
+        wave1234p.ch2[i] *= (0.5 - 0.5 * cos(2 * PI * i / (RANGE - 1)));
+        wave1234p.ch3[i] *= (0.5 - 0.5 * cos(2 * PI * i / (RANGE - 1)));
+        wave1234p.ch4[i] *= (0.5 - 0.5 * cos(2 * PI * i / (RANGE - 1)));
     }
     return &wave1234p;
 }
