@@ -20,7 +20,7 @@ AlsaCaptureAudio::~AlsaCaptureAudio()
 int AlsaCaptureAudio::initAudioCapture()
 {
     // Open PCM device for recording(capture)
-    rc = snd_pcm_open(&handle, "hw:0,0", SND_PCM_STREAM_CAPTURE, 0);
+    rc = snd_pcm_open(&handle, "route_2_2", SND_PCM_STREAM_CAPTURE, 0);
     if (rc < 0)
     {
         fprintf(stderr, "unable to open pcm device: %s\n", snd_strerror(rc));

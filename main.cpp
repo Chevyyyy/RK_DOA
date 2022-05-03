@@ -27,6 +27,7 @@ double Passband_High;
 double reference_angle;
 string train_path;
 
+
 using namespace chrono;
 using namespace std;
 int main()
@@ -118,11 +119,15 @@ int main()
         //@1st STEP measurement confidence and data select
         while (volume < volume_threshold)
         {
+            if (abs(volume + 1) > 1e-3)
+            {
+                k++;
+            }
             auto start = system_clock::now();
 
 #ifndef ON_RKCHIP_FLAG
-            int start_point = (i + k) * RANGE+SAMPLE_RATE*3;
-            if (start_point > SAMPLE_RATE * 10)
+            int start_point = (i + k) * RANGE + SAMPLE_RATE * 0;
+            if ((start_point > SAMPLE_RATE * 20 - 512))
             {
                 exit(1);
             }
@@ -130,11 +135,10 @@ int main()
             usleep(Usleep_time);
             wav_decoder.read_wav_file();
             // calculate the volume of a period of sound
-            wavech1234_no_window=wav_decoder.wave_to_chs_4c(SHOW_RAW_DATA);
+            wavech1234_no_window = wav_decoder.wave_to_chs_4c(SHOW_RAW_DATA);
 #else
-            wav_decoder.record();
+            wavech1234_no_window=wav_decoder.record();
 #endif
-            k++;
             wavech1234 = wav_decoder.hamming();
             volume = SP_tool.get_volume(wavech1234_no_window->ch1);
             double volume1 = volume;
@@ -142,7 +146,7 @@ int main()
 #ifdef PHAT_SPR
             // PHAT-SPR
             double delay_cc_white_second_cc_ratio[6];
-            gcc_phat->PHAT_SRP_4mic(wavech1234_no_window,wavech1234, 5, delay_cc_white_second_cc_ratio, confidence_CC_THRESHOLD);
+            gcc_phat->PHAT_SRP_4mic(wavech1234_no_window, wavech1234, 5, delay_cc_white_second_cc_ratio, confidence_CC_THRESHOLD);
             double delay = delay_cc_white_second_cc_ratio[0];
 
             confidence_CC = delay_cc_white_second_cc_ratio[1];
@@ -267,21 +271,23 @@ int main()
             auto duration = duration_cast<microseconds>(end - start);
             double duration_time = double(duration.count()) * microseconds::period::num / microseconds::period::den;
             //@ 3rd STEP update kalman due to time interval
+
             A(0, 1) = duration_time;
             dt = duration_time;
 
-            if (no_obvious_sound_count < no_obvious_count_threshold)
+            if (no_obvious_sound_count < 10000)
             {
 // for accuracy calculation
 #ifndef ON_RKCHIP_FLAG
                 SP_tool.show_accuracy(reference_angle);
 #endif
+
                 // visualize
                 vis_tool.write_angles_to_txt(SP_tool.theta, SP_tool.theta_filtered);
                 // print
-                cout << "##" << left << setw(7) << k + i << left << setw(7) << "theta@@: " << left << setw(9) << fixed << setprecision(2) << theta_output << left << setw(7) << "filtered: " << left << setw(8) << fixed << setprecision(2) << SP_tool.theta_filtered << left << setw(5) << "Volume:" << left << setw(4) << volume1 << left << setw(13) << "   sample_fre: " << left << setw(5) << fixed << setprecision(0) << 1 / duration_time << "Hz";
+                cout << "##" << left << setw(7) << i + k << left << setw(7) << "theta@@: " << left << setw(9) << fixed << setprecision(2) << theta_output << left << setw(7) << "filtered: " << left << setw(8) << fixed << setprecision(2) << SP_tool.theta_filtered << left << setw(5) << "Volume:" << left << setw(4) << volume1 << left << setw(13) << "   sample_fre: " << left << setw(5) << fixed << setprecision(0) << 1 / duration_time << "Hz";
                 cout << left << setw(7) << "   CC: " << left << setw(9) << fixed << setprecision(2) << confidence_CC << left << setw(15) << "Speech_Ratio: " << left << setw(7) << fixed << setprecision(2) << speech_ratio << left << setw(10) << "coherent_p: " << possibility;
-                if(volume>volume_threshold)
+                if (volume > volume_threshold)
                 {
                     cout << "  good!" << endl;
                 };

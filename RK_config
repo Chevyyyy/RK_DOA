@@ -1,20 +1,20 @@
 confidence_CC_THRESHOLD (double) 
-0.0
+0.05
 
 no_obvious_count_threshold (int)
-50
+100
 
 speech_ratio_threshold (double)
-30
+0
 
 single_measure_tolerance (double)
-0.1
+0.2
 
 obvious_strict_sequence (double) 
-3
+2
 
 speed_attenuation_ratio (double) 
-0.95
+0.9
 
 traking_speed_amplification (double) 
 1.5
@@ -23,16 +23,16 @@ Volume_threshold (double)
 0.1
 
 Passband_Low (double)
-100
+150
 
 Passband_High (double)
-5000
+4000
 
 reference_angle (double)
 20
 
 train_path (string)
-../sound_data/drag/10s_20deg_speech_large_room.wav
+../sound_data/48000Hz_report/small_room/20s_60-60_small_room.wav
 
 
 

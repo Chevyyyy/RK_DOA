@@ -42,7 +42,7 @@ typedef struct WAV_data
     uint32_t Subchunk2Size; /* data size */
     /* sub-chunk-data */
 
-    int16_t block[SAMPLE_RATE * 4 * 10];
+    int16_t block[SAMPLE_RATE * 4 * 20];
 } Data_t;
 
 typedef struct WAV_format
@@ -76,7 +76,7 @@ public:
     {
     }
 
-    void record();
+    Wave1234 * record();
     void set_start_point(int set_value);
     void set_wav_path(const char *path);
     void read_wav_file();

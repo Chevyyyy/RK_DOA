@@ -68,7 +68,6 @@ namespace zo
 
                 siga_fft[i] = reA[i] + I * imA[i];
                 siga_fft[sample_cnt - i - 1] = reA[i] + I * imA[i];
-
             }
 
             std::vector<std::complex<float>> sigb_fft(sample_cnt);
@@ -105,10 +104,10 @@ namespace zo
             {
                 reR[i] = R[i].real();
                 imR[i] = R[i].imag();
-                if ((i > high_i) || (i < (low_i+1)))
+                if ((i > high_i) || (i < (low_i + 1)))
                 {
-                    reR[i] = 0;
-                    imR[i] = 0;
+                    // reR[i] = 0;
+                    // imR[i] = 0;
                 }
             }
 
@@ -184,19 +183,6 @@ namespace zo
             shift<float>(shifted, cross_correlation_sum);
             std::vector<float> shifted_mid(shifted);
 
-            // smooth shifted cc list
-            // for (int i = 0; i < 20; i++)
-            // {
-            //     shifted_mid[sample_cnt / 2 - i] = shifted[sample_cnt / 2 - (i + 1)] + shifted[sample_cnt / 2 - (i)] + shifted[sample_cnt / 2 - (i - 1)];
-            //     shifted_mid[sample_cnt / 2 + i] = shifted[sample_cnt / 2 + (i + 1)] + shifted[sample_cnt / 2 + (i)] + shifted[sample_cnt / 2 + (i - 1)];
-            // }
-            // for (int i=0;i<20;i++)
-            // {
-            //     shifted[sample_cnt/2-i]=shifted_mid[sample_cnt/2-i]/3;
-            //     shifted[sample_cnt/2+i]=shifted_mid[sample_cnt/2+i]/3;
-
-            // }
-
             // First, make sure the margin is within the bounds of the computed lags
             int n = cross_correlation_sum.size();
             double center_i = ceil(n / 2.0);
@@ -230,6 +216,13 @@ namespace zo
             arg_max[4] = *std::max_element(shifted.begin() + start_i, shifted.begin() + start_i + len);
 
             arg_max[5] = target_band_ratio;
+            // report FYP
+            std::ofstream out_first("../sound_data/FYP_report/first_angle.txt", std::ios::app);
+            std::ofstream out_second("../sound_data/FYP_report/second_angle.txt", std::ios::app);
+
+
+            out_first << 180 * asin((arg_max[0] * Vs) / (SAMPLE_RATE * mic_distance)) / PI << " ";
+            out_second << 180 * asin((arg_max[3] * Vs) / (SAMPLE_RATE * mic_distance)) / PI << " ";
 
             if (arg_max[1] < confidence_CC_THRESHOLD)
             {
@@ -250,6 +243,39 @@ namespace zo
                 arg_max[3] = -20;
             }
         }
+
+        void GCC_PHAT_4mic(Wave1234 *wave1234_no_window, Wave1234 *wave1234, int margin, double *arg_max, double confidence_CC_THRESHOLD)
+        {
+
+            double a, b, c, d, e, f = 0;
+            wave1234_no_W = wave1234_no_window;
+
+            execute(wave1234->ch1, wave1234->ch2, 5, arg_max);
+            a = arg_max[0];
+            execute(wave1234->ch2, wave1234->ch3, 5, arg_max);
+            b = arg_max[0];
+            execute(wave1234->ch3, wave1234->ch4, 5, arg_max);
+            c = arg_max[0];
+
+            execute(wave1234->ch1, wave1234->ch3, 10, arg_max);
+            d = arg_max[0] / 2.0;
+            execute(wave1234->ch2, wave1234->ch4, 10, arg_max);
+            e = arg_max[0] / 2.0;
+            execute(wave1234->ch1, wave1234->ch4, 15, arg_max);
+            f = arg_max[0] / 3.0;
+
+            double delay = (a + b + c + d + e + f) / 6.0;
+            // report FYP
+            std::ofstream out("../sound_data/FYP_report/data.txt", std::ios::app);
+
+            if (out.is_open())
+            {
+
+                out << 180 * asin((delay * Vs) / (SAMPLE_RATE * mic_distance)) / PI << " ";
+                // out.close();
+            }
+        }
+
         void PHAT_SRP_3mic(Wave1234 *wave1234, int margin, double *arg_max, double confidence_CC_THRESHOLD)
         {
             float mean1 = std::accumulate(wave1234->ch1.begin(), wave1234->ch1.end(), 0) / sample_cnt;

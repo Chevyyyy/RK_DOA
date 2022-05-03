@@ -5,6 +5,8 @@
 #include "main.hpp"
 #include "wav_decode.hpp"
 #include "numeric"
+#include <fstream>
+#include<iostream>
 
 namespace zo
 {
@@ -53,6 +55,7 @@ namespace zo
         virtual void PHAT_SRP_4mic(Wave1234 *wave1234_no_window,Wave1234 *wave1234, int margin, double *arg_max, double confidence_CC_THRESHOLD) = 0;
         virtual void PHAT_SRP_2mic(Wave1234 *wave1234, int margin, double *arg_max, double confidence_CC_THRESHOLD) = 0;
         virtual void PHAT_SRP_2mic_times_4(Wave1234 *wave1234, int margin, double *arg_max, double confidence_CC_THRESHOLD) = 0;
+        virtual void GCC_PHAT_4mic(Wave1234 *wave1234_no_window, Wave1234 *wave1234, int margin, double *arg_max, double confidence_CC_THRESHOLD) = 0;
     };
 } // namespace zo
 

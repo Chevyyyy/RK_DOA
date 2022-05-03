@@ -16,7 +16,7 @@ void rk_config();
 
 //@brief: mode
 #define Track_speech_flag
-// #define ON_RKCHIP_FLAG
+#define ON_RKCHIP_FLAG
 
 //@brief: MATH algorithm & hyperparameters
 #define PHAT_SPR
@@ -24,6 +24,6 @@ void rk_config();
 
 
 //@brief: parameters (testing)
-#define Usleep_time 7000
+#define Usleep_time 0
 // #define VISUAL_QT_FLAG
 

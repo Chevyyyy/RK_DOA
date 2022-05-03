@@ -13,7 +13,7 @@ wav_decode::wav_decode()
     wav_path = "sound_data/test.wav";
     wav_start_point = 0;
 }
-void wav_decode::record()
+Wave1234 * wav_decode::record()
 {
     // string cmd = "arecord -D hw:0,0 -c 8 -r 44100 -s " + to_string(RANGE) + "  -f  S16_LE  --period-size=1024  --buffer-size=4096 /CHEVY_FYP/sound_data/test.wav &>a.log";
     // system(cmd.data());
