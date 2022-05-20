@@ -58,6 +58,7 @@ Directly go to step 2 (setup on RKchip)
     you can open another adb shell terminal for tunning the parameters while running the program 
 
     cd CHEVY_FYP
+    
     vi RK_config
     ......
 
