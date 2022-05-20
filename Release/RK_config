@@ -1,0 +1,35 @@
+confidence_CC_THRESHOLD (double) 
+0.15
+
+no_obvious_count_threshold (int)
+100
+
+target_band_ratio_threshold (double)
+70
+
+coherence_tolerance (double)
+0.05
+
+obvious_strict_sequence (double) 
+3
+
+speed_attenuation_ratio (double) 
+0.99
+
+traking_speed_amplification (double) 
+3
+
+Volume_threshold (double)
+0.25
+
+Passband_Low (double)
+100
+
+Passband_High (double)
+50000
+
+reference_angle (double)
+20
+
+train_path (string)
+../sound_data/48000Hz_report/small_room/20s_60-60_small_room.wav

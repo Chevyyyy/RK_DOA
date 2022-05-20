@@ -25,6 +25,7 @@ private:
     Ui::MainWindow *ui;
     double angle;
     double angle_filtered;
+    double radius;
 
 };
 

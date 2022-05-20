@@ -27,7 +27,6 @@ double Passband_High;
 double reference_angle;
 string train_path;
 
-
 using namespace chrono;
 using namespace std;
 int main()
@@ -42,7 +41,7 @@ int main()
     wav_decoder.set_start_point(0);
 
     // alsa record init
-    AlsaCaptureAudio alsaCaptureAudio;
+    // AlsaCaptureAudio alsaCaptureAudio;
 
     // GCCPHAT object init
     zo::GccPhat *gcc_phat = zo::GccPhat::create();
@@ -100,10 +99,10 @@ int main()
     int deg_0_count = 0;
     for (int i = 0; i < 10000000; i++)
     {
-        if (i % 3000 == 0)
-        {
-            system("clear");
-        }
+        // if (i % 3000 == 0)
+        // {
+        //     system("clear");
+        // }
         // timer start
         double volume = -1;
         SP_tool.theta = -20;
@@ -137,16 +136,18 @@ int main()
             // calculate the volume of a period of sound
             wavech1234_no_window = wav_decoder.wave_to_chs_4c(SHOW_RAW_DATA);
 #else
-            wavech1234_no_window=wav_decoder.record();
+            wavech1234_no_window = wav_decoder.record();
 #endif
             wavech1234 = wav_decoder.hamming();
+
             volume = SP_tool.get_volume(wavech1234_no_window->ch1);
             double volume1 = volume;
 
 #ifdef PHAT_SPR
             // PHAT-SPR
             double delay_cc_white_second_cc_ratio[6];
-            gcc_phat->PHAT_SRP_4mic(wavech1234_no_window, wavech1234, 5, delay_cc_white_second_cc_ratio, confidence_CC_THRESHOLD);
+
+            gcc_phat->PHAT_SRP_4mic(wavech1234_no_window, wavech1234, 5, delay_cc_white_second_cc_ratio, confidence_CC_THRESHOLD, Passband_High, Passband_Low);
             double delay = delay_cc_white_second_cc_ratio[0];
 
             confidence_CC = delay_cc_white_second_cc_ratio[1];
@@ -158,8 +159,8 @@ int main()
             // no obvious sound detect
             if (no_obvious_sound_count > no_obvious_count_threshold)
             {
-                vis_tool.write_angles_to_txt(-1000, -1000);
-                cout << "&&&&&&&&&&&&&&&&&&&&&\n****************\n";
+                // vis_tool.write_angles_to_txt(-1000, -1000);
+                // cout << "&&&&&&&&&&&&&&&&&&&&&\n****************\n";
                 if (obvious_sound_count == 0)
                 {
                     SP_tool.theta_filtered = SP_tool.get_theta(delay);
@@ -178,7 +179,7 @@ int main()
             // get the theta through delays
 
             theta_output = SP_tool.get_theta(delay);
-            possibility = KF.Possiblity_of_coherent_source(SP_tool.theta) * 100;
+            possibility = sqrt(KF.Possiblity_of_coherent_source(SP_tool.theta) * 1000);
 
             if ((possibility < single_measure_tolerance) || (delay == -20))
             {
@@ -187,7 +188,7 @@ int main()
                 {
                     delay = delay_cc_white_second_cc_ratio[3];
                     theta_output = SP_tool.get_theta(delay);
-                    possibility = KF.Possiblity_of_coherent_source(SP_tool.theta) * 100;
+            possibility = sqrt(KF.Possiblity_of_coherent_source(SP_tool.theta) * 1000);
 
                     if (possibility < single_measure_tolerance)
                     {
@@ -274,31 +275,93 @@ int main()
 
             A(0, 1) = duration_time;
             dt = duration_time;
-
-            if (no_obvious_sound_count < 10000)
+            if (no_obvious_sound_count > no_obvious_count_threshold)
             {
+                vis_tool.write_angles_to_txt(-900, SP_tool.theta_filtered);
+            }
+            else
+            {
+                vis_tool.write_angles_to_txt(SP_tool.theta, SP_tool.theta_filtered);
+            }
+
+            // if (no_obvious_sound_count < no_obvious_count_threshold)
+            // {
 // for accuracy calculation
 #ifndef ON_RKCHIP_FLAG
-                SP_tool.show_accuracy(reference_angle);
+            SP_tool.show_accuracy(reference_angle);
 #endif
-
-                // visualize
-                vis_tool.write_angles_to_txt(SP_tool.theta, SP_tool.theta_filtered);
-                // print
-                cout << "##" << left << setw(7) << i + k << left << setw(7) << "theta@@: " << left << setw(9) << fixed << setprecision(2) << theta_output << left << setw(7) << "filtered: " << left << setw(8) << fixed << setprecision(2) << SP_tool.theta_filtered << left << setw(5) << "Volume:" << left << setw(4) << volume1 << left << setw(13) << "   sample_fre: " << left << setw(5) << fixed << setprecision(0) << 1 / duration_time << "Hz";
-                cout << left << setw(7) << "   CC: " << left << setw(9) << fixed << setprecision(2) << confidence_CC << left << setw(15) << "Speech_Ratio: " << left << setw(7) << fixed << setprecision(2) << speech_ratio << left << setw(10) << "coherent_p: " << possibility;
-                if (volume > volume_threshold)
-                {
-                    cout << "  good!" << endl;
-                };
+            // cout <<int(SP_tool.theta_filtered)<<endl;
+            // visualize
+            if ((i + k) % 200 == 1)
+            {
+                rk_config();
             }
+
+            cout << "##" << left << setw(6) << i + k;
+            if ((no_obvious_sound_count > no_obvious_count_threshold))
+            {
+                cout << " (----)";
+            }
+            else
+            {
+                cout << " (++++)";
+            }
+
+            cout << left << setw(7) << "  Theta: " << left << setw(8) << fixed << setprecision(1) << SP_tool.theta_filtered << "        ||   ";
+
+            if (volume1 > volume_threshold)
+            {
+                cout << "(+)";
+            }
+            else
+            {
+                cout << "(-)";
+            }
+            cout << left << setw(7) << fixed << setprecision(2) << volume1;
+
+            if (confidence_CC > confidence_CC_THRESHOLD)
+            {
+                cout << "(+)";
+            }
+            else
+            {
+                cout << "(-)";
+            }
+            cout << left << setw(7) << fixed << setprecision(2) << confidence_CC;
+
+            if (speech_ratio > speech_ratio_threshold)
+            {
+                cout << "(+)";
+            }
+            else
+            {
+                cout << "(-)";
+            }
+            cout << left << setw(4) << fixed << setprecision(0) << speech_ratio;
+
+            if (possibility > single_measure_tolerance)
+            {
+                cout << "(+)";
+            }
+            else
+            {
+                cout << "(-)";
+            }
+            cout << left << setw(7) << fixed << setprecision(2) << possibility;
+            cout << "||" << endl;
+
+            // print
+            // cout << "##" << left << setw(7) << i + k << left << setw(7) << "theta@@: " << left << setw(9) << fixed << setprecision(2) << theta_output << left << setw(7) << "filtered: " << left << setw(8) << fixed << setprecision(2) << SP_tool.theta_filtered << left << setw(5) << "Volume:" << left << setw(4) << volume1 << left << setw(13) << "   sample_fre: " << left << setw(5) << fixed << setprecision(0) << 1 / duration_time << "Hz";
+            // cout << left << setw(7) << "   CC: " << left << setw(9) << fixed << setprecision(2) << confidence_CC << left << setw(15) << "Speech_Ratio: " << left << setw(7) << fixed << setprecision(2) << speech_ratio << left << setw(10) << "coherent_p: " << possibility << endl;
+
+            // }
         }
     }
 }
 
 void rk_config()
 {
-    cout << "start configing" << endl;
+    // cout << "start configing" << endl;
 #ifdef ON_RKCHIP_FLAG
     ifstream myfile("./RK_config");
 #else
@@ -313,7 +376,7 @@ void rk_config()
         while (getline(myfile, line))
         {
             num_line++;
-            cout << line << '\n';
+            // cout << line << '\n';
             if (num_line % 3 == 2)
             {
                 switch (num_line / 3 + 1)
@@ -362,10 +425,6 @@ void rk_config()
         }
 
         myfile.close();
-    }
-    else
-    {
-        cout << "no config file" << endl;
-        exit(1);
+        // cout<<"Config successfully!"<<endl;
     }
 }

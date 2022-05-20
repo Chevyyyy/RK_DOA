@@ -146,9 +146,10 @@ namespace zo
             arg_max[1] = *std::max_element(shifted.begin() + start_i, shifted.begin() + start_i + len) / RANGE;
             target_band_ratio = speech_band_sum / all_band_sum;
         }
-        void PHAT_SRP_4mic(Wave1234 *wave1234_no_window, Wave1234 *wave1234, int margin, double *arg_max, double confidence_CC_THRESHOLD)
+        void PHAT_SRP_4mic(Wave1234 *wave1234_no_window, Wave1234 *wave1234, int margin, double *arg_max, double confidence_CC_THRESHOLD, double h, double l)
         {
-
+            band_high = h;
+            band_low = l;
             wave1234_no_W = wave1234_no_window;
             std::vector<float> cross_correlation_sum(sample_cnt);
 
@@ -219,7 +220,6 @@ namespace zo
             // report FYP
             std::ofstream out_first("../sound_data/FYP_report/first_angle.txt", std::ios::app);
             std::ofstream out_second("../sound_data/FYP_report/second_angle.txt", std::ios::app);
-
 
             out_first << 180 * asin((arg_max[0] * Vs) / (SAMPLE_RATE * mic_distance)) / PI << " ";
             out_second << 180 * asin((arg_max[3] * Vs) / (SAMPLE_RATE * mic_distance)) / PI << " ";

@@ -9,7 +9,7 @@ void stop_recording(int param)
 AlsaCaptureAudio::AlsaCaptureAudio()
 {
     pFile = fopen("test.pcm", "wb");
-    initAudioCapture();
+    initAudioCapture();         
 }
 AlsaCaptureAudio::~AlsaCaptureAudio()
 {
@@ -73,27 +73,27 @@ int16_t *AlsaCaptureAudio::captureAudio()
     rc = snd_pcm_readi(handle, buffer, frames);
     if (rc == -EPIPE)
     {
-        fprintf(stderr, "overrun occurred\n");
+        // fprintf(stderr, "overrun occurred\n");
         snd_pcm_prepare(handle);
     }
     else if (rc < 0)
     {
-        fprintf(stderr, "error from read: %s\n", snd_strerror(rc));
+        // fprintf(stderr, "error from read: %s\n", snd_strerror(rc));
     }
     else if (rc != (int)frames)
     {
-        fprintf(stderr, "short read, read %d frames\n", rc);
+        // fprintf(stderr, "short read, read %d frames\n", rc);
     }
     // printf("write to file......%d\n", size);
     // write to stdout
     rc = fwrite(buffer, sizeof(char), size, pFile);
     if (rc != size)
     {
-        fprintf(stderr, "short write: wrote %d bytes\n", rc);
+        // fprintf(stderr, "short write: wrote %d bytes\n", rc);
     }
     if (signal(SIGINT, stop_recording) == SIG_ERR)
     {
-        fprintf(stderr, "signal() failed\n");
+        // fprintf(stderr, "signal() failed\n");
     }
 
     return buffer;
@@ -105,5 +105,5 @@ void AlsaCaptureAudio::closeCapture()
     snd_pcm_close(handle);
     free(buffer);
     fclose(pFile);
-    printf("closeCapture\n");
+    // printf("closeCapture\n");
 }

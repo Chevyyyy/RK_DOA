@@ -36,12 +36,12 @@ public:
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QStringLiteral("MainWindow"));
-        MainWindow->resize(1000, 600);
+        MainWindow->resize(1000, 700);
         centralWidget = new QWidget(MainWindow);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
         textEdit = new QTextEdit(centralWidget);
         textEdit->setObjectName(QStringLiteral("textEdit"));
-        textEdit->setGeometry(QRect(10, 0, 391, 131));
+        textEdit->setGeometry(QRect(0, 490, 371, 131));
         textEdit->setStyleSheet(QLatin1String("\n"
 "font: 75 italic 20pt \"URW Bookman L\";"));
         MainWindow->setCentralWidget(centralWidget);

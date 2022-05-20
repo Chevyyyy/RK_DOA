@@ -56,9 +56,9 @@ void visualize::visualize_terminal(double theta)
 void visualize::write_angles_to_txt(double theta, double theta_filtered)
 {
     #ifndef ON_RKCHIP_FLAG
-    ofstream out("../sound_data/angles.txt");
+    ofstream out("../angles.txt");
     #else
-    ofstream out("sound_data/angles.txt");
+    ofstream out("angles.txt");
     #endif
     
     if(out.is_open())

@@ -7,7 +7,7 @@ void rk_config();
 #define CHANNEL_NUM 4
 #define mic_distance 0.0345
 #define Vs 340.0 // speed of sound
-#define RANGE 512
+#define RANGE 512*2
 #define SAMPLE_RATE 48000
 #define SHOW_RAW_DATA 0
 #define DELAY_MAX mic_distance*SAMPLE_RATE / Vs 

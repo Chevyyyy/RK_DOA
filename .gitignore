@@ -1,10 +1,10 @@
 # dir 不需要提交的目录
 build
-only_record/build
 .vscode
 ​build/
 # file 不需要提交的文件
 config.ini
+Release/angles.txt
 ​
 # log 不需要提交的任意包含后缀名为log的文件
 *.swp

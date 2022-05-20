@@ -8,6 +8,7 @@
 #include <string>
 #include "main.hpp"
 #include "AlsaCaptureAudio.h"
+#include "iostream"
 
 typedef struct WAV_RIFF
 {

@@ -47,6 +47,7 @@ double WaveSignalProcess::get_volume(std::vector<float> &wav_vector)
     double sum = 0;
     for (int i = 0; i < RANGE; i++)
     {
+
         sum += fabs(wav_vector[i]) / 32767;
     }
     return sum / RANGE * 100;

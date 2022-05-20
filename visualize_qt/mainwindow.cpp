@@ -31,36 +31,41 @@ void MainWindow::paintEvent(QPaintEvent *event)
     pen.setBrush(Qt::SolidPattern);
     ellipsePainter.setPen(pen);
 
-    for (int i = -1; i < 5; i++)
+    for (int i = -1; i < 2; i++)
     {
-        ellipsePainter.drawEllipse(QRect(100 + 50 * i, 200 + 50 * i, 800 - 100 * i, 800 - 100 * i));
+        ellipsePainter.drawEllipse(QRect(100 + 50 * i, -400 + 50 * i, 800 - 100 * i, 800 - 100 * i));
     }
 
-    //    ellipsePainter.drawEllipse(QRect(100+20,200+20,800-40,800-40));
+
 
     QPainter small_circle;
     small_circle.begin(this);
-    int test_amplified = 1;
-    double x = 500 + 400 * sin(test_amplified * angle / 180 * PI);
-    double y = 600 - 400 * cos(test_amplified * angle / 180 * PI);
-    double x_filtered = 500 + 400 * sin(test_amplified * angle_filtered / 180 * PI);
-    double y_filtered = 600 - 400 * cos(test_amplified * angle_filtered / 180 * PI);
+
+    double x = 500 + 400 * sin(  angle / 180 * PI);
+    double y = 400 * cos( angle / 180 * PI);
+    double x_filtered = 500 + 400 * sin( angle_filtered / 180 * PI);
+    double y_filtered =  400 * cos( angle_filtered / 180 * PI);
 
     double opacity = 0.2;
     double opacity_filtered = 1;
-    if ((angle == -1000) && (angle_filtered == -1000))
+
+
+    if ((angle < -800) )
     {
-        opacity = 0;
-        opacity_filtered = 0;
+            radius=0.9*radius;
+    }
+    else{
+
+radius=40;
     }
 
-    int radius = 20;
+
     small_circle.setBrush(Qt::SolidPattern);
     small_circle.setBrush(Qt::red);
     small_circle.setOpacity(opacity_filtered);
     small_circle.drawEllipse(QRect(x_filtered - radius, y_filtered - radius, 2 * radius, 2 * radius));
     small_circle.setPen(Qt::red);
-    small_circle.drawText(QRect(x_filtered - 45, y_filtered - 40, 100, 40), "sound source");
+//    small_circle.drawText(QRect(x_filtered - 55, y_filtered - 70, 200, 80), "sound source");
 
     small_circle.setBrush(Qt::SolidPattern);
     small_circle.setBrush(Qt::blue);
@@ -68,34 +73,30 @@ void MainWindow::paintEvent(QPaintEvent *event)
     small_circle.drawEllipse(QRect(x - radius, y - radius, 2 * radius, 2 * radius));
     small_circle.setPen(Qt::red);
     small_circle.setOpacity(1);
-    // small_circle.drawText(QRect(x-45,y+40,100,40),"NOLPF source");
 
-    //    small_circle.end();
-
-    //    QPen pen_small;
-
-    //    pen_small.setWidth(3);
-    //    pen_small.setColor(Qt::red);
-    //    pen_small.setBrush(Qt::SolidPattern);
-    //    small_circle.setPen(pen);
 }
 
 void MainWindow::timerCallBack()
 {
 
-    system("adb pull CHEVY_FYP/sound_data/angles.txt /home/chevy/Desktop/FYP_desk/RK_DOA/sound_data/");
+    system("adb pull CHEVY_FYP/angles.txt .");
     std::cout << "pulling" << std::endl;
     QString s;
     QString s_filtered;
 
-    QFile f("/home/chevy/Desktop/FYP_desk/RK_DOA/sound_data/angles.txt");
+    QFile f("./angles.txt");
     f.open(QIODevice::ReadOnly | QIODevice::Text);
     s = f.readLine(0);
     angle = s.toDouble();
 
     s_filtered = f.readLine();
+
+
     angle_filtered = s_filtered.toDouble();
+
     s = "angle: " + s + "\n" + "filterd: " + s_filtered;
+
+
 
     ui->textEdit->setText(s);
     update();
